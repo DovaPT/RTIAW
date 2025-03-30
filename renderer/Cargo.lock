@@ -3,12 +3,5 @@
 version = 4
 
 [[package]]
-name = "RTIAW"
-version = "0.1.0"
-dependencies = [
- "renderer",
-]
-
-[[package]]
 name = "renderer"
 version = "0.1.0"

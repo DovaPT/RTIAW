@@ -1,9 +1,18 @@
+use std::f64;
+
+#[allow(dead_code)]
+pub type Point3 = Vec3;
+
 #[derive(Clone, Copy)]
 pub struct Vec3 {
     pub e: [f64; 3],
 }
-
+#[allow(dead_code)]
 impl Vec3 {
+    pub fn new(e: [f64; 3]) -> Self {
+        Self { e }
+    }
+
     pub fn x(self) -> f64 {
         self[0]
     }
@@ -14,33 +23,36 @@ impl Vec3 {
         self[2]
     }
 
-    pub fn new() -> Self {
-        Vec3 { e: [0.0, 0.0, 0.0] }
-    }
     pub fn len(self) -> f64 {
-        self.len_sqrt().sqrt()
+        self.len_squared().sqrt()
     }
 
-    pub fn len_sqrt(self) -> f64 {
+    pub fn len_squared(self) -> f64 {
         self[0] * self[0] + self[1] * self[1] + self[2] * self[2]
     }
+}
+pub fn dot(u: Vec3, v: Vec3) -> f64 {
+    u[0] * v[0] + u[1] * v[1] + u[2] * v[2]
+}
 
-    pub fn dot(self, rhs: Self) -> f64 {
-        self[0] * rhs[0] + self[1] * rhs[1] + self[2] * rhs[2]
+pub fn cross(u: Vec3, v: Vec3) -> Vec3 {
+    Vec3 {
+        e: [
+            u[1] * v[2] - u[2] * v[1],
+            u[2] * v[0] - u[0] * v[2],
+            u[0] * v[1] - u[1] * v[0],
+        ],
     }
+}
 
-    pub fn cross(self, rhs: Self) -> Self {
-        Self {
-            e: [
-                self[1] * rhs[2] - self[2] * rhs[1],
-                self[2] * rhs[0] - self[0] * rhs[2],
-                self[0] * rhs[1] - self[1] * rhs[0],
-            ],
-        }
-    }
+pub fn unit_vector(v: Vec3) -> Vec3 {
+    v / v.len()
+}
 
-    pub fn unit_vector(self) -> Self {
-        self / self.len()
+impl std::ops::Mul<Vec3> for f64 {
+    type Output = Vec3;
+    fn mul(self, rhs: Vec3) -> Self::Output {
+        rhs * self
     }
 }
 

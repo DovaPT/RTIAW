@@ -1,7 +1,11 @@
 use std::io::Write;
 
+use renderer::INFINITY;
 use renderer::color::Color;
+use renderer::hittable::{HitRecord, Hittable};
+use renderer::hittable_list::{HittableList, Hittables};
 use renderer::ray::Ray;
+use renderer::sphere::Sphere;
 use renderer::vec3::{Point3, Vec3, dot, unit_vector};
 
 fn main() {
@@ -16,6 +20,16 @@ fn main() {
         _ => image_height,
     };
 
+    let mut world = Hittables::HITTABLELIST(HittableList::new());
+
+    world.add(Hittables::SPHERE(Sphere::new(
+        Point3::new([0.0, 0.0, -1.0]),
+        0.5,
+    )));
+    world.add(Hittables::SPHERE(Sphere::new(
+        Point3::new([0.0, -100.5, -1.0]),
+        100.0,
+    )));
     //Camera
 
     let focal_length = 1.0;
@@ -47,7 +61,7 @@ fn main() {
                 orig: camera_center,
                 dir: ray_direction,
             };
-            let pixel_color = ray_color(r);
+            let pixel_color = ray_color(&r, &world);
             println!("{}", pixel_color.write_color());
             std::io::stdout().flush().unwrap();
         }
@@ -55,24 +69,10 @@ fn main() {
     eprint!("{:<23}", "\rDone")
 }
 
-fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> f64 {
-    let oc = *center - *r.origin();
-    let a = r.direction().len_squared();
-    let h = dot(*r.direction(), oc);
-    let c = oc.len_squared() - radius * radius;
-    let discriminant = h * h - a * c;
-    if discriminant < 0.0 {
-        return -1.0;
-    } else {
-        return (h - discriminant.sqrt()) / a;
-    }
-}
-
-fn ray_color(r: Ray) -> Color {
-    let t = hit_sphere(&Point3::new([0.0, 0.0, -1.0]), 0.5, &r);
-    if t > 0.0 {
-        let n = unit_vector(r.at(t) - Vec3::new([0.0, 0.0, -1.0]));
-        return 0.5 * Color::new([n.x() + 1.0, n.y() + 1.0, n.z() + 1.0]);
+fn ray_color(r: &Ray, world: &Hittables) -> Color {
+    let ref mut rec = HitRecord::blank();
+    if <Hittables as Clone>::clone(&world).hit(r, 0.0, INFINITY, rec) {
+        return 0.5 * (rec.normal + Color::new([1.0, 1.0, 1.0]));
     }
     let unit_direction = unit_vector(*r.direction());
     let a = 0.5 * (unit_direction.y() + 1.0);

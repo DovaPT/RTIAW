@@ -1,4 +1,4 @@
-use crate::vmodule::vec3;
+use crate::lib;
 pub type Color = vec3::Vec3;
 
 impl Color {

@@ -1,9 +1,19 @@
 #[derive(Clone, Copy)]
-struct Vec3 {
-    e: [f64; 3],
+pub struct Vec3 {
+    pub e: [f64; 3],
 }
 
 impl Vec3 {
+    pub fn x(self) -> f64 {
+        self[0]
+    }
+    pub fn y(self) -> f64 {
+        self[1]
+    }
+    pub fn z(self) -> f64 {
+        self[2]
+    }
+
     pub fn new() -> Self {
         Vec3 { e: [0.0, 0.0, 0.0] }
     }

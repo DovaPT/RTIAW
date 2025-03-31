@@ -23,7 +23,7 @@ fn main() {
         _ => image_height,
     };
 
-    let mut world = HittableList::new();
+    let mut world = HittableList::default();
 
     world.add(Hittables::SPHERE(Sphere::new(
         Point3::new([0.0, 0.0, -1.0]),
@@ -39,7 +39,7 @@ fn main() {
     let focal_length = 1.0;
     let viewport_height = 2.0;
     let viewport_width = viewport_height * (image_width as f64 / image_height as f64);
-    let camera_center = Point3::new([0.0, 0.0, 0.0]);
+    let camera_center = Point3::new([0.0, 10.0, 0.0]);
 
     // Calc vectors across horizontal and down vertical viewport edges
     let viewport_u = Vec3::new([viewport_width, 0.0, 0.0]);
@@ -81,7 +81,7 @@ fn main() {
 }
 
 fn ray_color(r: &Ray, world: Rc<HittableList>) -> Color {
-    let ref mut rec = HitRecord::blank();
+    let ref mut rec = HitRecord::default();
     if world.hit(r, 0.0, INFINITY, rec) {
         return 0.5 * (rec.normal + Color::new([1.0, 1.0, 1.0]));
     }

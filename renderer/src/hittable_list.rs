@@ -3,7 +3,7 @@ use crate::{
     sphere::Sphere,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct HittableList {
     objects: Vec<Hittables>,
 }

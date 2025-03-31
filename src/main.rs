@@ -1,4 +1,5 @@
 use std::io::Write;
+use std::rc::Rc;
 
 use renderer::INFINITY;
 use renderer::color::Color;
@@ -6,10 +7,12 @@ use renderer::hittable::{HitRecord, Hittable};
 use renderer::hittable_list::{HittableList, Hittables};
 use renderer::ray::Ray;
 use renderer::sphere::Sphere;
-use renderer::vec3::{Point3, Vec3, dot, unit_vector};
+use renderer::vec3::{Point3, Vec3, unit_vector};
 
 fn main() {
     // Image
+    let mut image_file = std::fs::File::create("image.ppm").expect("cant create image.ppm");
+
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 2560;
 
@@ -20,7 +23,7 @@ fn main() {
         _ => image_height,
     };
 
-    let mut world = Hittables::HITTABLELIST(HittableList::new());
+    let mut world = HittableList::new();
 
     world.add(Hittables::SPHERE(Sphere::new(
         Point3::new([0.0, 0.0, -1.0]),
@@ -30,6 +33,7 @@ fn main() {
         Point3::new([0.0, -100.5, -1.0]),
         100.0,
     )));
+    let rc_world: Rc<HittableList> = Rc::new(world);
     //Camera
 
     let focal_length = 1.0;
@@ -50,9 +54,10 @@ fn main() {
         camera_center - Vec3::new([0.0, 0.0, focal_length]) - viewport_u / 2.0 - viewport_v / 2.0;
     let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
-    std::print!("P3\n {} {}\n255\n", image_width, image_height);
+    write!(image_file, "P3\n {} {}\n255\n", image_width, image_height)
+        .expect("Failed to write to image.ppm");
     for j in 0..image_height {
-        eprint!("\rScanlines remaining: {} ", (image_height - j));
+        print!("\rScanlines remaining: {} ", (image_height - j));
         for i in 0..image_width {
             let pixel_center =
                 pixel00_loc + (i as f64 * pixel_delta_u) + (j as f64 * pixel_delta_v);
@@ -61,17 +66,23 @@ fn main() {
                 orig: camera_center,
                 dir: ray_direction,
             };
-            let pixel_color = ray_color(&r, &world);
-            println!("{}", pixel_color.write_color());
-            std::io::stdout().flush().unwrap();
+            let pixel_color = ray_color(&r, rc_world.clone());
+            writeln!(image_file, "{}", pixel_color.write_color())
+                .expect("Failed to write to image.ppm");
         }
+        std::io::stdout()
+            .flush()
+            .expect("Failed to flush to stdout");
     }
-    eprint!("{:<23}", "\rDone")
+    image_file
+        .flush()
+        .expect("Failed to flush buffer to image.ppm");
+    print!("{:<23}", "\rDone")
 }
 
-fn ray_color(r: &Ray, world: &Hittables) -> Color {
+fn ray_color(r: &Ray, world: Rc<HittableList>) -> Color {
     let ref mut rec = HitRecord::blank();
-    if <Hittables as Clone>::clone(&world).hit(r, 0.0, INFINITY, rec) {
+    if world.hit(r, 0.0, INFINITY, rec) {
         return 0.5 * (rec.normal + Color::new([1.0, 1.0, 1.0]));
     }
     let unit_direction = unit_vector(*r.direction());

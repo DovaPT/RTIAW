@@ -13,21 +13,21 @@ impl Vec3 {
         Self { e }
     }
 
-    pub fn x(self) -> f64 {
+    pub fn x(&self) -> f64 {
         self[0]
     }
-    pub fn y(self) -> f64 {
+    pub fn y(&self) -> f64 {
         self[1]
     }
-    pub fn z(self) -> f64 {
+    pub fn z(&self) -> f64 {
         self[2]
     }
 
-    pub fn len(self) -> f64 {
+    pub fn len(&self) -> f64 {
         self.len_squared().sqrt()
     }
 
-    pub fn len_squared(self) -> f64 {
+    pub fn len_squared(&self) -> f64 {
         self[0] * self[0] + self[1] * self[1] + self[2] * self[2]
     }
 }

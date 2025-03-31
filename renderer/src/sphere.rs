@@ -17,7 +17,7 @@ impl Sphere {
 
 impl Hittable for Sphere {
     fn hit(
-        self,
+        &self,
         r: &Ray,
         ray_tmin: f64,
         ray_tmax: f64,

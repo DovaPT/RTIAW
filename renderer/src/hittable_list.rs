@@ -15,7 +15,7 @@ pub enum Hittables {
 }
 
 impl Hittable for Hittables {
-    fn hit(self, r: &crate::ray::Ray, ray_tmin: f64, ray_tmax: f64, rec: &mut HitRecord) -> bool {
+    fn hit(&self, r: &crate::ray::Ray, ray_tmin: f64, ray_tmax: f64, rec: &mut HitRecord) -> bool {
         match self {
             Hittables::SPHERE(sphere) => sphere.hit(r, ray_tmin, ray_tmax, rec),
             Hittables::HITTABLELIST(h_list) => h_list.hit(r, ray_tmin, ray_tmax, rec),
@@ -49,12 +49,12 @@ impl HittableList {
 }
 
 impl Hittable for HittableList {
-    fn hit(self, r: &crate::ray::Ray, ray_tmin: f64, ray_tmax: f64, rec: &mut HitRecord) -> bool {
+    fn hit(&self, r: &crate::ray::Ray, ray_tmin: f64, ray_tmax: f64, rec: &mut HitRecord) -> bool {
         let ref mut temp_rec = HitRecord::blank();
         let mut hit_anything = false;
         let mut closest_so_far = ray_tmax;
 
-        for object in self.objects {
+        for object in &self.objects {
             if object.hit(r, ray_tmin, closest_so_far, temp_rec) {
                 hit_anything = true;
                 closest_so_far = temp_rec.t;

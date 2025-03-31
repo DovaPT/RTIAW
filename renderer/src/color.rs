@@ -2,7 +2,7 @@ use crate::vec3::Vec3;
 pub type Color = Vec3;
 
 impl Color {
-    pub fn write_color(self) -> String {
+    pub fn write_color(&self) -> String {
         use std::fmt::Write;
         let rbyte = (self.x() * 255.999) as i32;
         let gbyte = (self.y() * 255.999) as i32;

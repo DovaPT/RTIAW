@@ -1,5 +1,7 @@
 use crate::{
     hittable::{HitRecord, Hittable},
+    internal::Interval,
+    ray::Ray,
     sphere::Sphere,
 };
 
@@ -15,10 +17,10 @@ pub enum Hittables {
 }
 
 impl Hittable for Hittables {
-    fn hit(&self, r: &crate::ray::Ray, ray_tmin: f64, ray_tmax: f64, rec: &mut HitRecord) -> bool {
+    fn hit(&self, r: &crate::ray::Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool {
         match self {
-            Hittables::SPHERE(sphere) => sphere.hit(r, ray_tmin, ray_tmax, rec),
-            Hittables::HITTABLELIST(h_list) => h_list.hit(r, ray_tmin, ray_tmax, rec),
+            Hittables::SPHERE(sphere) => sphere.hit(r, ray_t, rec),
+            Hittables::HITTABLELIST(h_list) => h_list.hit(r, ray_t, rec),
         }
     }
 }
@@ -49,13 +51,13 @@ impl HittableList {
 }
 
 impl Hittable for HittableList {
-    fn hit(&self, r: &crate::ray::Ray, ray_tmin: f64, ray_tmax: f64, rec: &mut HitRecord) -> bool {
+    fn hit(&self, r: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool {
         let ref mut temp_rec = HitRecord::blank();
         let mut hit_anything = false;
-        let mut closest_so_far = ray_tmax;
-
+        let mut closest_so_far = ray_t.max;
         for object in &self.objects {
-            if object.hit(r, ray_tmin, closest_so_far, temp_rec) {
+            let temp_ray_t = Interval::new(ray_t.min, closest_so_far);
+            if object.hit(r, &temp_ray_t, temp_rec) {
                 hit_anything = true;
                 closest_so_far = temp_rec.t;
                 temp_rec.clone_into(rec);

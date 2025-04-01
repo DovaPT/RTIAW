@@ -9,8 +9,8 @@ pub struct Vec3 {
 }
 #[allow(dead_code)]
 impl Vec3 {
-    pub fn new(e: [f64; 3]) -> Self {
-        Self { e }
+    pub fn new(x: f64, y: f64, z: f64) -> Self {
+        Self { e: [x, y, z] }
     }
 
     pub fn x(&self) -> f64 {
@@ -31,11 +31,11 @@ impl Vec3 {
         self[0] * self[0] + self[1] * self[1] + self[2] * self[2]
     }
 }
-pub fn dot(u: Vec3, v: Vec3) -> f64 {
+pub fn dot(u: &Vec3, v: &Vec3) -> f64 {
     u[0] * v[0] + u[1] * v[1] + u[2] * v[2]
 }
 
-pub fn cross(u: Vec3, v: Vec3) -> Vec3 {
+pub fn cross(u: &Vec3, v: &Vec3) -> Vec3 {
     Vec3 {
         e: [
             u[1] * v[2] - u[2] * v[1],
@@ -45,8 +45,8 @@ pub fn cross(u: Vec3, v: Vec3) -> Vec3 {
     }
 }
 
-pub fn unit_vector(v: Vec3) -> Vec3 {
-    v / v.len()
+pub fn unit_vector(v: &Vec3) -> Vec3 {
+    *v / v.len()
 }
 
 impl std::ops::Mul<Vec3> for f64 {

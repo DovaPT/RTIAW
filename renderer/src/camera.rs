@@ -4,23 +4,26 @@ use crate::{
     hittable::{HitRecord, Hittable},
     hittable_list::HittableList,
     internal::Interval,
+    rand_f64,
     ray::Ray,
     vec3::{Point3, Vec3, unit_vector},
 };
 
+use core::f64;
 use std::{fs::File, io::Write, rc::Rc};
 
 pub struct Camera {
     // Public
-    pub aspect_ratio: f64, // Ratio of image width over image_height
-    pub image_width: i32,  // Rendered image width in pixel count
-
+    pub aspect_ratio: f64,      // Ratio of image width over image_height
+    pub image_width: i32,       // Rendered image width in pixel count
+    pub samples_per_pixel: i32, // Count of random samples for each pixel
     // Private
-    image_height: i32,   // Rendered image height
-    center: Point3,      // Camera height
-    pixel00_loc: Point3, // Location of pixel at 0, 0
-    pixel_delta_u: Vec3, // Offset to pixel to the right
-    pixel_delta_v: Vec3, // Offset to pixel below
+    image_height: i32,        // Rendered image height
+    pixel_samples_scale: f64, // Color scale factor for a sum of pixel samples
+    center: Point3,           // Camera height
+    pixel00_loc: Point3,      // Location of pixel at 0, 0
+    pixel_delta_u: Vec3,      // Offset to pixel to the right
+    pixel_delta_v: Vec3,      // Offset to pixel below
 }
 
 impl Default for Camera {
@@ -28,7 +31,9 @@ impl Default for Camera {
         Self {
             aspect_ratio: 1.0,
             image_width: 100,
+            samples_per_pixel: 10,
             image_height: i32::default(),
+            pixel_samples_scale: f64::default(),
             center: Point3::default(),
             pixel00_loc: Point3::default(),
             pixel_delta_u: Vec3::default(),
@@ -38,7 +43,7 @@ impl Default for Camera {
 }
 
 impl Camera {
-    pub fn render(&mut self, image_file: &mut File, world: Rc<HittableList>) {
+    pub fn render(&mut self, image_file: &mut File, world: &Rc<HittableList>) {
         self.init();
         write!(
             image_file,
@@ -46,20 +51,24 @@ impl Camera {
             self.image_width, self.image_height
         )
         .expect("Failed to write to image.ppm");
+
+        let mut r: Ray;
+        let mut pixel_color: Color;
         for j in 0..self.image_height {
             print!("\rScanlines remaining: {} ", (self.image_height - j));
             for i in 0..self.image_width {
-                let pixel_center = self.pixel00_loc
-                    + (i as f64 * self.pixel_delta_u)
-                    + (j as f64 * self.pixel_delta_v);
-                let ray_direction = pixel_center - self.center;
-                let r: Ray = Ray {
-                    orig: self.center,
-                    dir: ray_direction,
-                };
-                let pixel_color = Self::ray_color(&r, world.clone());
-                writeln!(image_file, "{}", pixel_color.write_color())
-                    .expect("Failed to write to image.ppm");
+                pixel_color = Color::new(0.0, 0.0, 0.0);
+                for _ in 0..self.samples_per_pixel {
+                    r = self.get_ray(i, j);
+                    pixel_color += Self::ray_color(&r, &world);
+                }
+
+                writeln!(
+                    image_file,
+                    "{}",
+                    (self.pixel_samples_scale * pixel_color).write_color()
+                )
+                .expect("Failed to write to image.ppm");
             }
             std::io::stdout()
                 .flush()
@@ -71,12 +80,30 @@ impl Camera {
         print!("{:<23}", "\rDone")
     }
 
+    fn get_ray(&self, i: i32, j: i32) -> Ray {
+        let offset = Self::sample_square();
+        let pixel_sample = self.pixel00_loc
+            + ((i as f64 + offset.x()) * self.pixel_delta_u)
+                * ((j as f64 + offset.y()) * self.pixel_delta_v);
+
+        let ray_origin = self.center;
+        let ray_direction = pixel_sample - ray_origin;
+
+        Ray::new(ray_origin, ray_direction)
+    }
+
+    fn sample_square() -> Vec3 {
+        Vec3::new(rand_f64() - 0.5, rand_f64() - 0.5, 0.0)
+    }
+
     fn init(&mut self) {
         self.image_height = (self.image_width as f64 / self.aspect_ratio) as i32;
         self.image_height = match self.image_height {
             x if x < 1 => 1,
             _ => self.image_height,
         };
+
+        self.pixel_samples_scale = 1.0 / self.samples_per_pixel as f64;
         // Determine viewport dimensions
         let focal_length = 1.0;
         let viewport_height = 2.0;
@@ -96,7 +123,7 @@ impl Camera {
         self.pixel00_loc = viewport_upper_left + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);
     }
 
-    fn ray_color(r: &Ray, world: Rc<HittableList>) -> Color {
+    fn ray_color(r: &Ray, world: &Rc<HittableList>) -> Color {
         let ref mut rec = HitRecord::default();
         if world.hit(r, &Interval::new(0.0, INFINITY), rec) {
             return 0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0));

@@ -1,3 +1,5 @@
+use core::f64;
+
 pub mod camera;
 pub mod color;
 pub mod hittable;
@@ -14,6 +16,10 @@ pub fn degrees_to_radains(degrees: f64) -> f64 {
     degrees.to_radians()
 }
 
-pub fn random_double() -> f64 {
-    return PI;
+pub fn rand_f64() -> f64 {
+    rand::random_range(0.0..=1.0)
+}
+
+pub fn rand_range_f64(min: f64, max: f64) -> f64 {
+    rand::random_range(min..=max)
 }

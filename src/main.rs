@@ -24,9 +24,11 @@ fn main() {
 
     let mut cam = Camera::default();
     cam.aspect_ratio = 16.0 / 9.0;
-    cam.image_width = 2560;
+    cam.image_width = 400;
 
-    cam.render(&mut image_file, rc_world);
+    cam.samples_per_pixel = 100;
+    cam.render(&mut image_file, &rc_world.clone());
     let time_elapsed = timer.elapsed();
-    println!("It took {} seconds", time_elapsed.as_secs_f64());
+    let s = format!("\rIt took {} seconds", time_elapsed.as_secs_f64());
+    println!("{:<23}", s);
 }

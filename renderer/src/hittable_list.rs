@@ -9,7 +9,6 @@ use crate::{
 pub struct HittableList {
     objects: Vec<Hittables>,
 }
-
 #[derive(Clone)]
 pub enum Hittables {
     SPHERE(Sphere),
@@ -17,7 +16,7 @@ pub enum Hittables {
 }
 
 impl Hittable for Hittables {
-    fn hit(&self, r: &crate::ray::Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool {
+    fn hit(&self, r: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool {
         match self {
             Hittables::SPHERE(sphere) => sphere.hit(r, ray_t, rec),
             Hittables::HITTABLELIST(h_list) => h_list.hit(r, ray_t, rec),
@@ -29,7 +28,7 @@ impl Hittables {
     pub fn add(&mut self, object: Hittables) {
         match self {
             Hittables::HITTABLELIST(h_list) => h_list.add(object),
-            _ => panic!(),
+            _ => {}
         }
     }
 }

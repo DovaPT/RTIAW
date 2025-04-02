@@ -14,4 +14,6 @@ pub fn degrees_to_radains(degrees: f64) -> f64 {
     degrees.to_radians()
 }
 
-pub fn random_double() -> f64 {}
+pub fn random_double() -> f64 {
+    return PI;
+}

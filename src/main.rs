@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{rc::Rc, time};
 
 use renderer::{
     camera::Camera,
@@ -8,8 +8,8 @@ use renderer::{
 };
 
 fn main() {
+    let timer = time::Instant::now();
     let mut image_file = std::fs::File::create("image.ppm").expect("cant create image.ppm");
-
     let mut world = HittableList::default();
 
     world.add(Hittables::SPHERE(Sphere::new(
@@ -24,7 +24,9 @@ fn main() {
 
     let mut cam = Camera::default();
     cam.aspect_ratio = 16.0 / 9.0;
-    cam.image_width = 500;
+    cam.image_width = 2560;
 
     cam.render(&mut image_file, rc_world);
+    let time_elapsed = timer.elapsed();
+    println!("It took {} seconds", time_elapsed.as_secs_f64());
 }

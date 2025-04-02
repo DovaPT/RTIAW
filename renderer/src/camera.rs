@@ -60,9 +60,7 @@ impl Camera {
                 pixel_color = Color::new(0.0, 0.0, 0.0);
                 for _ in 0..self.samples_per_pixel {
                     r = self.get_ray(i, j);
-                    dbg!(r);
-                    pixel_color += Self::ray_color(&r, &world);
-                    dbg!(pixel_color);
+                    pixel_color += Camera::ray_color(&r, &world);
                 }
 
                 writeln!(
@@ -83,14 +81,12 @@ impl Camera {
     }
 
     fn get_ray(&self, i: i32, j: i32) -> Ray {
-        let offset = Self::sample_square();
+        let offset = Camera::sample_square();
         let pixel_sample = self.pixel00_loc
             + ((i as f64 + offset.x()) * self.pixel_delta_u)
-                * ((j as f64 + offset.y()) * self.pixel_delta_v);
-
+            + ((j as f64 + offset.y()) * self.pixel_delta_v);
         let ray_origin = self.center;
         let ray_direction = pixel_sample - ray_origin;
-
         Ray::new(ray_origin, ray_direction)
     }
 

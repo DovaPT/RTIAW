@@ -24,7 +24,7 @@ fn main() {
 
     let mut cam = Camera::default();
     cam.aspect_ratio = 16.0 / 9.0;
-    cam.image_width = 400;
+    cam.image_width = 500;
 
     cam.render(&mut image_file, rc_world);
 }

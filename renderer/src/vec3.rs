@@ -3,7 +3,7 @@ use std::f64;
 #[allow(dead_code)]
 pub type Point3 = Vec3;
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone, Copy, Debug)]
 pub struct Vec3 {
     pub e: [f64; 3],
 }

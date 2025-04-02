@@ -60,7 +60,9 @@ impl Camera {
                 pixel_color = Color::new(0.0, 0.0, 0.0);
                 for _ in 0..self.samples_per_pixel {
                     r = self.get_ray(i, j);
+                    dbg!(r);
                     pixel_color += Self::ray_color(&r, &world);
+                    dbg!(pixel_color);
                 }
 
                 writeln!(

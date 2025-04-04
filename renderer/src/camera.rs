@@ -9,8 +9,7 @@ use crate::{
     vec3::{Point3, Vec3, unit_vector},
 };
 
-use core::f64;
-use std::{fs::File, io::Write, rc::Rc};
+use std::{fs::File, io::Write};
 
 pub struct Camera {
     // Public
@@ -43,7 +42,7 @@ impl Default for Camera {
 }
 
 impl Camera {
-    pub fn render(&mut self, image_file: &mut File, world: &Rc<HittableList>) {
+    pub fn render(&mut self, image_file: &mut File, world: &HittableList) {
         self.init();
         write!(
             image_file,
@@ -121,9 +120,9 @@ impl Camera {
         self.pixel00_loc = viewport_upper_left + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);
     }
 
-    fn ray_color(r: &Ray, world: &Rc<HittableList>) -> Color {
-        let ref mut rec = HitRecord::default();
-        if world.hit(r, &Interval::new(0.0, INFINITY), rec) {
+    fn ray_color(r: &Ray, world: &HittableList) -> Color {
+        let mut rec = HitRecord::default();
+        if world.hit(r, &Interval::new(0.0, INFINITY), &mut rec) {
             return 0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0));
         }
         let unit_direction = unit_vector(r.direction());

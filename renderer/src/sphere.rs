@@ -1,9 +1,9 @@
-use crate::hittable::Hittable;
+use crate::hittable::{Hittable, HitRecord};
 use crate::internal::Interval;
 use crate::ray::Ray;
 use crate::vec3::{Point3, dot};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub struct Sphere {
     center: Point3,
     radius: f64,
@@ -17,7 +17,8 @@ impl Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, r: &Ray, ray_t: &Interval, rec: &mut crate::hittable::HitRecord) -> bool {
+
+    fn hit(&self, r: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool {
         let oc = self.center - *r.origin();
         let a = r.direction().len_squared();
         let h = dot(r.direction(), &oc);

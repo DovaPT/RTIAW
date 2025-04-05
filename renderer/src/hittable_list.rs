@@ -1,39 +1,18 @@
-use crate::{
-    hittable::{HitRecord, Hittable},
-    internal::Interval,
-    ray::Ray,
-    sphere::Sphere,
+use crate::hittable::{HitRecord, Hittable,
 };
+use crate::internal::Interval;
+use crate::ray::Ray;
 
 #[derive(Clone, Default)]
-pub struct HittableList {
-    objects: Vec<Hittables>,
-}
-#[derive(Clone)]
-pub enum Hittables {
-    SPHERE(Sphere),
-    HITTABLELIST(HittableList),
+pub struct HittableList<H>{
+    objects: Vec<H>,
 }
 
-impl Hittable for Hittables {
-    fn hit(&self, r: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool {
-        match self {
-            Hittables::SPHERE(sphere) => sphere.hit(r, ray_t, rec),
-            Hittables::HITTABLELIST(h_list) => h_list.hit(r, ray_t, rec),
-        }
-    }
-}
 
-impl Hittables {
-    pub fn add(&mut self, object: Hittables) {
-        match self {
-            Hittables::HITTABLELIST(h_list) => h_list.add(object),
-            _ => {}
-        }
-    }
-}
 
-impl HittableList {
+
+
+impl<H> HittableList<H> {
     pub fn new() -> Self {
         Self {
             objects: Vec::new(),
@@ -44,14 +23,15 @@ impl HittableList {
         self.objects.clear();
     }
 
-    pub fn add(&mut self, object: Hittables) {
+    pub fn add(&mut self, object: H) {
         self.objects.push(object);
     }
 }
 
-impl Hittable for HittableList {
+impl<H> Hittable for HittableList<H> where H: Hittable {
+
     fn hit(&self, r: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool {
-        let ref mut temp_rec = HitRecord::blank();
+        let temp_rec = &mut HitRecord::blank();
         let mut hit_anything = false;
         let mut closest_so_far = ray_t.max;
         for object in &self.objects {
@@ -62,6 +42,7 @@ impl Hittable for HittableList {
                 temp_rec.clone_into(rec);
             }
         }
-        return hit_anything;
+        hit_anything
     }
+
 }

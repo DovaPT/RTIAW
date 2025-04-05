@@ -22,7 +22,7 @@ pub struct Camera {
     center: Point3,           // Camera height
     pixel00_loc: Point3,      // Location of pixel at 0, 0
     pixel_delta_u: Vec3,      // Offset to pixel to the right
-    pixel_delta_v: Vec3,      // Offset to pixel below
+    pixel_delta_v: Vec3,// Offset to pixel below
 }
 
 impl Default for Camera {
@@ -42,7 +42,7 @@ impl Default for Camera {
 }
 
 impl Camera {
-    pub fn render(&mut self, image_file: &mut File, world: &HittableList) {
+    pub fn render<H: Hittable>(&mut self, image_file: &mut File, world: &HittableList<H>) {
         self.init();
         write!(
             image_file,
@@ -59,7 +59,7 @@ impl Camera {
                 pixel_color = Color::new(0.0, 0.0, 0.0);
                 for _ in 0..self.samples_per_pixel {
                     r = self.get_ray(i, j);
-                    pixel_color += Camera::ray_color(&r, &world);
+                    pixel_color += Camera::ray_color(&r, world);
                 }
 
                 writeln!(
@@ -79,7 +79,19 @@ impl Camera {
         print!("{:<23}", "\rDone")
     }
 
-    fn get_ray(&self, i: i32, j: i32) -> Ray {
+    fn ray_color<H: Hittable>(r: &Ray, world: &HittableList<H>) -> Color {
+        let mut rec = HitRecord::default();
+        if world.hit(r, &Interval::new(0.0, INFINITY), &mut rec) {
+            return 0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0));
+        }
+        let unit_direction = unit_vector(r.direction());
+        let a = 0.5 * (unit_direction.y() + 1.0);
+        (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
+    }
+}
+
+impl Camera{
+        fn get_ray(&self, i: i32, j: i32) -> Ray {
         let offset = Camera::sample_square();
         let pixel_sample = self.pixel00_loc
             + ((i as f64 + offset.x()) * self.pixel_delta_u)
@@ -120,13 +132,5 @@ impl Camera {
         self.pixel00_loc = viewport_upper_left + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);
     }
 
-    fn ray_color(r: &Ray, world: &HittableList) -> Color {
-        let mut rec = HitRecord::default();
-        if world.hit(r, &Interval::new(0.0, INFINITY), &mut rec) {
-            return 0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0));
-        }
-        let unit_direction = unit_vector(r.direction());
-        let a = 0.5 * (unit_direction.y() + 1.0);
-        (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
-    }
+
 }

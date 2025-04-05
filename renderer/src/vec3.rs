@@ -31,20 +31,20 @@ impl Vec3 {
         self[0] * self[0] + self[1] * self[1] + self[2] * self[2]
     }
 }
+#[inline]
 pub fn dot(u: &Vec3, v: &Vec3) -> f64 {
+
     u[0] * v[0] + u[1] * v[1] + u[2] * v[2]
 }
-
+#[inline]
 pub fn cross(u: &Vec3, v: &Vec3) -> Vec3 {
-    Vec3 {
-        e: [
+    Vec3::new(
             u[1] * v[2] - u[2] * v[1],
             u[2] * v[0] - u[0] * v[2],
-            u[0] * v[1] - u[1] * v[0],
-        ],
-    }
+            u[0] * v[1] - u[1] * v[0]
+    )
 }
-
+#[inline]
 pub fn unit_vector(v: &Vec3) -> Vec3 {
     *v / v.len()
 }

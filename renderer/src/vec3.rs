@@ -1,13 +1,14 @@
-use std::f64;
 
-#[allow(dead_code)]
+use crate::{rand_f64, rand_range_f64};
+
+
 pub type Point3 = Vec3;
 
 #[derive(Default, Clone, Copy, Debug)]
 pub struct Vec3 {
     pub e: [f64; 3],
 }
-#[allow(dead_code)]
+
 impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self { e: [x, y, z] }
@@ -30,24 +31,26 @@ impl Vec3 {
     pub fn len_squared(&self) -> f64 {
         self[0] * self[0] + self[1] * self[1] + self[2] * self[2]
     }
-}
-#[inline]
-pub fn dot(u: &Vec3, v: &Vec3) -> f64 {
 
-    u[0] * v[0] + u[1] * v[1] + u[2] * v[2]
+    pub fn random() -> Self {
+        Self{e: [ rand_f64(), rand_f64(), rand_f64()]}
+    }
+    pub fn random_rng(min: f64, max: f64) -> Self{
+        Self {e:[rand_range_f64(min, max), rand_range_f64(min, max), rand_range_f64(min, max)]}
+    }
+
+    pub fn near_zero(&self) -> bool{
+        let s = 1e-8;
+        (self[0].abs() < s) && (self[1].abs() < s) && (self[2].abs() < s)
+    }
+
+    pub fn change(&mut self, v: Vec3){
+        self[0] = v[0];
+        self[1] = v[1];
+        self[2] = v[2];
+    }
 }
-#[inline]
-pub fn cross(u: &Vec3, v: &Vec3) -> Vec3 {
-    Vec3::new(
-            u[1] * v[2] - u[2] * v[1],
-            u[2] * v[0] - u[0] * v[2],
-            u[0] * v[1] - u[1] * v[0]
-    )
-}
-#[inline]
-pub fn unit_vector(v: &Vec3) -> Vec3 {
-    *v / v.len()
-}
+
 
 impl std::ops::Mul<Vec3> for f64 {
     type Output = Vec3;
@@ -165,4 +168,58 @@ impl std::ops::DivAssign<f64> for Vec3 {
         self[1] /= rhs;
         self[2] /= rhs;
     }
+}
+
+#[inline]
+pub fn dot(u: &Vec3, v: &Vec3) -> f64 {
+
+    u[0] * v[0] + u[1] * v[1] + u[2] * v[2]
+}
+
+#[inline]
+pub fn cross(u: &Vec3, v: &Vec3) -> Vec3 {
+    Vec3::new(
+            u[1] * v[2] - u[2] * v[1],
+            u[2] * v[0] - u[0] * v[2],
+            u[0] * v[1] - u[1] * v[0]
+    )
+}
+
+#[inline]
+pub fn unit_vector(v: &Vec3) -> Vec3 {
+    *v / v.len()
+}
+
+#[inline]
+pub fn random_unit_vector() -> Vec3{
+    loop{
+        let p = Vec3::random_rng(-1_f64, 1_f64);
+        let lensq = p.len_squared();
+        if lensq <= 1_f64{
+            return p / lensq.sqrt();
+        }
+    }
+}
+
+#[inline]
+pub fn random_on_hemisphere(normal: &Vec3) -> Vec3 {
+    let on_unit_sphere = random_unit_vector();
+    if dot(&on_unit_sphere, normal) > 0.0{
+        on_unit_sphere
+    } else {
+        -on_unit_sphere
+    }
+}
+
+#[inline]
+pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3{
+    *v - 2.0 * dot(v, n) * *n
+}
+
+#[inline]
+pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: &f64) -> Vec3{
+    let cos_theta = dot(&-(*uv), n).min(1.0);
+    let r_out_perp = (*etai_over_etat) * ((*uv) + cos_theta * (*n));
+    let r_out_parallel = -((1.0 - r_out_perp.len_squared()).abs()).sqrt() * (*n);
+    r_out_perp + r_out_parallel
 }

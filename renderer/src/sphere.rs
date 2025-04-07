@@ -1,5 +1,6 @@
 use crate::hittable::{Hittable, HitRecord};
 use crate::internal::Interval;
+use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::{Point3, dot};
 
@@ -7,12 +8,13 @@ use crate::vec3::{Point3, dot};
 pub struct Sphere {
     center: Point3,
     radius: f64,
+    mat: Material,
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f64) -> Self {
+    pub fn new(center: Point3, radius: f64, mat: Material) -> Self {
         let radius = radius.max(0.0);
-        Self { center, radius }
+        Self { center, radius, mat }
     }
 }
 
@@ -43,7 +45,8 @@ impl Hittable for Sphere {
         rec.t = root;
         rec.p = r.at(rec.t);
         let outward_normal = (rec.p - self.center) / self.radius;
-        rec.set_face_normal(&r, &outward_normal);
-        return true;
+        rec.set_face_normal(r, &outward_normal);
+        rec.mat = self.mat;
+        true
     }
 }

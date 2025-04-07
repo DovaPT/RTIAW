@@ -20,4 +20,8 @@ impl Ray {
     pub fn at(&self, t: f64) -> Point3 {
         self.orig + t * self.dir
     }
+    pub fn change(&mut self, orig: Point3, dir: Vec3){
+        self.orig = orig;
+        self.dir = dir;
+    }
 }

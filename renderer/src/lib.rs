@@ -1,5 +1,3 @@
-use core::f64;
-
 pub mod camera;
 pub mod color;
 pub mod hittable;
@@ -8,6 +6,7 @@ pub mod internal;
 pub mod ray;
 pub mod sphere;
 pub mod vec3;
+pub mod material;
 
 pub static INFINITY: f64 = f64::INFINITY;
 pub static PI: f64 = 3.1415926535897932385;

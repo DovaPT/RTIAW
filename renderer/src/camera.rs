@@ -1,6 +1,6 @@
 use crate::{
     INFINITY,
-    color::Color,
+    color::{Color, write_color},
     hittable::{HitRecord, Hittable},
     hittable_list::HittableList,
     internal::Interval,
@@ -16,13 +16,14 @@ pub struct Camera {
     pub aspect_ratio: f64,      // Ratio of image width over image_height
     pub image_width: i32,       // Rendered image width in pixel count
     pub samples_per_pixel: i32, // Count of random samples for each pixel
+    pub max_depth: i32,
     // Private
     image_height: i32,        // Rendered image height
     pixel_samples_scale: f64, // Color scale factor for a sum of pixel samples
     center: Point3,           // Camera height
     pixel00_loc: Point3,      // Location of pixel at 0, 0
     pixel_delta_u: Vec3,      // Offset to pixel to the right
-    pixel_delta_v: Vec3,// Offset to pixel below
+    pixel_delta_v: Vec3,      // Offset to pixel below
 }
 
 impl Default for Camera {
@@ -31,6 +32,7 @@ impl Default for Camera {
             aspect_ratio: 1.0,
             image_width: 100,
             samples_per_pixel: 10,
+            max_depth: 10,
             image_height: i32::default(),
             pixel_samples_scale: f64::default(),
             center: Point3::default(),
@@ -42,7 +44,7 @@ impl Default for Camera {
 }
 
 impl Camera {
-    pub fn render<H: Hittable>(&mut self, image_file: &mut File, world: &HittableList<H>) {
+    pub fn render(&mut self, image_file: &mut File, world: &HittableList) {
         self.init();
         write!(
             image_file,
@@ -59,13 +61,13 @@ impl Camera {
                 pixel_color = Color::new(0.0, 0.0, 0.0);
                 for _ in 0..self.samples_per_pixel {
                     r = self.get_ray(i, j);
-                    pixel_color += Camera::ray_color(&r, world);
+                    pixel_color += Camera::ray_color(&r, self.max_depth, world);
                 }
 
                 writeln!(
                     image_file,
                     "{}",
-                    (self.pixel_samples_scale * pixel_color).write_color()
+                    write_color(&(self.pixel_samples_scale * pixel_color))
                 )
                 .expect("Failed to write to image.ppm");
             }
@@ -79,10 +81,17 @@ impl Camera {
         print!("{:<23}", "\rDone")
     }
 
-    fn ray_color<H: Hittable>(r: &Ray, world: &HittableList<H>) -> Color {
+    fn ray_color(r: &Ray, depth: i32, world: &HittableList) -> Color {
+        if depth <= 0 {
+            return Color::new(0_f64, 0_f64, 0_f64);
+        }
         let mut rec = HitRecord::default();
-        if world.hit(r, &Interval::new(0.0, INFINITY), &mut rec) {
-            return 0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0));
+        if world.hit(r, &Interval::new(0.001, INFINITY), &mut rec) {
+            let mut scattered = Ray::new(Vec3::default(), Vec3::default());
+            let mut attenuation = Color::default();
+            if rec.mat.scatter(r, &rec, &mut attenuation, &mut scattered){
+                return attenuation * Self::ray_color(&scattered, depth - 1, world);
+            }
         }
         let unit_direction = unit_vector(r.direction());
         let a = 0.5 * (unit_direction.y() + 1.0);
@@ -90,8 +99,8 @@ impl Camera {
     }
 }
 
-impl Camera{
-        fn get_ray(&self, i: i32, j: i32) -> Ray {
+impl Camera {
+    fn get_ray(&self, i: i32, j: i32) -> Ray {
         let offset = Camera::sample_square();
         let pixel_sample = self.pixel00_loc
             + ((i as f64 + offset.x()) * self.pixel_delta_u)
@@ -131,6 +140,4 @@ impl Camera{
             self.center - Vec3::new(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
         self.pixel00_loc = viewport_upper_left + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);
     }
-
-
 }

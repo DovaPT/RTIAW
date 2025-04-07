@@ -3,16 +3,16 @@ use crate::hittable::{HitRecord, Hittable,
 use crate::internal::Interval;
 use crate::ray::Ray;
 
-#[derive(Clone, Default)]
-pub struct HittableList<H>{
-    objects: Vec<H>,
+#[derive(Default)]
+pub struct HittableList{
+    objects: Vec<Box<dyn Hittable>>,
 }
 
 
 
 
 
-impl<H> HittableList<H> {
+impl HittableList {
     pub fn new() -> Self {
         Self {
             objects: Vec::new(),
@@ -23,12 +23,12 @@ impl<H> HittableList<H> {
         self.objects.clear();
     }
 
-    pub fn add(&mut self, object: H) {
+    pub fn add(&mut self, object: Box<dyn Hittable>) {
         self.objects.push(object);
     }
 }
 
-impl<H> Hittable for HittableList<H> where H: Hittable {
+impl Hittable for HittableList {
 
     fn hit(&self, r: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool {
         let temp_rec = &mut HitRecord::blank();

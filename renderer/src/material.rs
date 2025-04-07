@@ -6,18 +6,19 @@ use crate::{
 
 #[derive(Clone, Copy)]
 pub enum Material {
-    Lambertain(Color),
-    Metal(Color, f64),
-    Dielectric(f64),
+    Lambertain{color: Color},
+    Metal{color: Color, fuzz: f64},
+    Dielectric{refraction_index: f64},
 }
 
 impl Default for Material {
     fn default() -> Self {
-        Self::Lambertain(Color::default())
+        Self::Lambertain{color: Color::default()}
     }
 }
 
 impl Material {
+
     pub fn scatter(
         self,
         r_in: &Ray,
@@ -26,7 +27,7 @@ impl Material {
         scattered: &mut Ray,
     ) -> bool {
         match self {
-            Material::Lambertain(albedo) => {
+            Material::Lambertain{color: albedo} => {
                 let mut scatter_direction = rec.normal + random_unit_vector();
 
                 if scatter_direction.near_zero() {
@@ -38,7 +39,7 @@ impl Material {
 
                 true
             }
-            Material::Metal(albedo, mut fuzz) => {
+            Material::Metal{color: albedo, mut fuzz} => {
                 if fuzz > 1.0 {
                     fuzz = 1.0;
                 }
@@ -49,7 +50,7 @@ impl Material {
 
                 dot(scattered.direction(), &rec.normal) > 0.0
             }
-            Material::Dielectric(refraction_index) => {
+            Material::Dielectric{refraction_index} => {
                 attenuation.change(Color { e: [1.0, 1.0, 1.0] });
                 let ri = if rec.front_face {
                     1.0 / refraction_index

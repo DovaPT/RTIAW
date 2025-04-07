@@ -23,8 +23,8 @@ impl HittableList {
         self.objects.clear();
     }
 
-    pub fn add(&mut self, object: Box<dyn Hittable>) {
-        self.objects.push(object);
+    pub fn add<H: Hittable + 'static>(&mut self, object: H) {
+        self.objects.push(Box::new(object));
     }
 }
 

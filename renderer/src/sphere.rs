@@ -2,7 +2,7 @@ use crate::hittable::{Hittable, HitRecord};
 use crate::internal::Interval;
 use crate::material::Material;
 use crate::ray::Ray;
-use crate::vec3::{Point3, dot};
+use crate::vec3::{dot, Point3};
 
 #[derive(Clone, Copy, Default)]
 pub struct Sphere {
@@ -12,9 +12,9 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f64, mat: Material) -> Self {
+    pub fn new(pos: [f64; 3], radius: f64, mat: Material) -> Self {
         let radius = radius.max(0.0);
-        Self { center, radius, mat }
+        Self { center: Point3{e: pos}, radius, mat }
     }
 }
 

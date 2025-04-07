@@ -1,7 +1,7 @@
 use core::f64;
 
 use crate::{
-    color::Color, hittable::HitRecord, rand_f64, ray::Ray, vec3::{dot, random_unit_vector, reflect, refract, unit_vector, Vec3}
+    color::Color, hittable::HitRecord, rand_f64, ray::Ray, vec3::{dot, random_unit_vector, reflect, refract, unit_vector}
 };
 
 #[derive(Clone, Copy)]

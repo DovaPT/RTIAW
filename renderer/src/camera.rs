@@ -18,12 +18,12 @@ pub struct Camera {
     pub samples_per_pixel: i32, // Count of random samples for each pixel
     pub max_depth: i32,
     // Private
-    image_height: i32,        // Rendered image height
-    pixel_samples_scale: f64, // Color scale factor for a sum of pixel samples
-    center: Point3,           // Camera height
-    pixel00_loc: Point3,      // Location of pixel at 0, 0
-    pixel_delta_u: Vec3,      // Offset to pixel to the right
-    pixel_delta_v: Vec3,      // Offset to pixel below
+    pub image_height: i32,        // Rendered image height
+    pub pixel_samples_scale: f64, // Color scale factor for a sum of pixel samples
+    pub center: Point3,           // Camera height
+    pub pixel00_loc: Point3,      // Location of pixel at 0, 0
+    pub pixel_delta_u: Vec3,      // Offset to pixel to the right
+    pub pixel_delta_v: Vec3,      // Offset to pixel below
 }
 
 impl Default for Camera {
@@ -44,43 +44,9 @@ impl Default for Camera {
 }
 
 impl Camera {
-    pub fn render(&mut self, image_file: &mut File, world: &HittableList) {
-        self.init();
-        write!(
-            image_file,
-            "P3\n {} {}\n255\n",
-            self.image_width, self.image_height
-        )
-        .expect("Failed to write to image.ppm");
-
-        let mut r: Ray;
-        let mut pixel_color: Color;
-        for j in 0..self.image_height {
-            print!("\rScanlines remaining: {} ", (self.image_height - j));
-            for i in 0..self.image_width {
-                pixel_color = Color::new(0.0, 0.0, 0.0);
-                for _ in 0..self.samples_per_pixel {
-                    r = self.get_ray(i, j);
-                    pixel_color += Camera::ray_color(&r, self.max_depth, world);
-                }
-
-                writeln!(
-                    image_file,
-                    "{}",
-                    write_color(&(self.pixel_samples_scale * pixel_color))
-                )
-                .expect("Failed to write to image.ppm");
-            }
-            std::io::stdout()
-                .flush()
-                .expect("Failed to flush to stdout");
-        }
-        image_file
-            .flush()
-            .expect("Failed to flush buffer to image.ppm");
-        print!("{:<23}", "\rDone")
-    }
-
+    
+    
+    
     fn ray_color(r: &Ray, depth: i32, world: &HittableList) -> Color {
         if depth <= 0 {
             return Color::new(0_f64, 0_f64, 0_f64);
@@ -114,7 +80,7 @@ impl Camera {
         Vec3::new(rand_f64() - 0.5, rand_f64() - 0.5, 0.0)
     }
 
-    fn init(&mut self) {
+    pub fn init(&mut self) {
         self.image_height = (self.image_width as f64 / self.aspect_ratio) as i32;
         self.image_height = match self.image_height {
             x if x < 1 => 1,
@@ -141,3 +107,39 @@ impl Camera {
         self.pixel00_loc = viewport_upper_left + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);
     }
 }
+
+pub fn render(cam: &mut Camera, image_file: &mut File, world: &HittableList) {
+        write!(
+            image_file,
+            "P3\n {} {}\n255\n",
+            cam.image_width, cam.image_height
+        )
+        .expect("Failed to write to image.ppm");
+
+        let mut r: Ray;
+        let mut pixel_color: Color;
+        for j in 0..cam.image_height {
+            print!("\rScanlines remaining: {} ", (cam.image_height - j));
+            for i in 0..cam.image_width {
+                pixel_color = Color::new(0.0, 0.0, 0.0);
+                for _ in 0..cam.samples_per_pixel {
+                    r = cam.get_ray(i, j);
+                    pixel_color += Camera::ray_color(&r, cam.max_depth, world);
+                }
+
+                writeln!(
+                    image_file,
+                    "{}",
+                    write_color(&(cam.pixel_samples_scale * pixel_color))
+                )
+                .expect("Failed to write to image.ppm");
+            }
+            std::io::stdout()
+                .flush()
+                .expect("Failed to flush to stdout");
+        }
+        image_file
+            .flush()
+            .expect("Failed to flush buffer to image.ppm");
+        print!("{:<23}", "\rDone")
+    }

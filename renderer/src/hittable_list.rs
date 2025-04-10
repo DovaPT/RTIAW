@@ -1,46 +1,24 @@
-use crate::sphere::Sphere;
+use std::boxed::Box;
 use crate::{hittable::{HitRecord, Hittable,
 }, internal::Interval};
 use crate::ray::Ray;
 
+#[derive(Default)]
 pub struct HittableList{
-    objects: [Shapes; 10],
-    last_index: usize,
-}
-
-#[derive(Clone, Copy)]
-enum Shapes {
-    Empty,
-    Sphere(Sphere),
-}
-impl Hittable for Shapes {
-    fn hit(&self, r: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool {
-        match self {
-            Shapes::Empty => false,
-            Shapes::Sphere(sphere) => sphere.hit(r, ray_t, rec)
-        }
-    }
-}
-
-impl Default for HittableList{
-    fn default() -> Self {
-        Self {
-            objects: [Shapes::Empty; 10],
-            last_index: 0,
-        }
-    }
+    objects: Vec<Box<dyn Hittable>>,
 }
 
 impl HittableList {
     
 
     pub fn clear(&mut self) {
-        
+        self.objects.clear()
     }
+}
 
-    pub fn add_sphere(&mut self, object: Sphere) {
-        self.objects[self.last_index] = Shapes::Sphere(object);
-        self.last_index += 1;
+impl HittableList{
+    pub fn add(&mut self, object: impl Hittable + 'static) {
+        self.objects.push(Box::new(object));
     }
 }
 

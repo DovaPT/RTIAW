@@ -43,42 +43,9 @@ impl Default for Camera {
     }
 }
 
-impl Camera {
-    
-    
-    
-    fn ray_color(r: &Ray, depth: i32, world: &HittableList) -> Color {
-        if depth <= 0 {
-            return Color::new(0_f64, 0_f64, 0_f64);
-        }
-        let mut rec = HitRecord::default();
-        if world.hit(r, &Interval::new(0.001, INFINITY), &mut rec) {
-            let mut scattered = Ray::new(Vec3::default(), Vec3::default());
-            let mut attenuation = Color::default();
-            if rec.mat.scatter(r, &rec, &mut attenuation, &mut scattered){
-                return attenuation * Self::ray_color(&scattered, depth - 1, world);
-            }
-        }
-        let unit_direction = unit_vector(r.direction());
-        let a = 0.5 * (unit_direction.y() + 1.0);
-        (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
-    }
-}
+impl Camera {}
 
-impl Camera {
-    fn get_ray(&self, i: i32, j: i32) -> Ray {
-        let offset = Camera::sample_square();
-        let pixel_sample = self.pixel00_loc
-            + ((i as f64 + offset.x()) * self.pixel_delta_u)
-            + ((j as f64 + offset.y()) * self.pixel_delta_v);
-        let ray_origin = self.center;
-        let ray_direction = pixel_sample - ray_origin;
-        Ray::new(ray_origin, ray_direction)
-    }
-
-    fn sample_square() -> Vec3 {
-        Vec3::new(rand_f64() - 0.5, rand_f64() - 0.5, 0.0)
-    }
+impl Camera { 
 
     pub fn init(&mut self) {
         self.image_height = (self.image_width as f64 / self.aspect_ratio) as i32;
@@ -109,37 +76,68 @@ impl Camera {
 }
 
 pub fn render(cam: &mut Camera, image_file: &mut File, world: &HittableList) {
-        write!(
-            image_file,
-            "P3\n {} {}\n255\n",
-            cam.image_width, cam.image_height
-        )
-        .expect("Failed to write to image.ppm");
+    write!(
+        image_file,
+        "P3\n {} {}\n255\n",
+        cam.image_width, cam.image_height
+    )
+    .expect("Failed to write to image.ppm");
 
-        let mut r: Ray;
-        let mut pixel_color: Color;
-        for j in 0..cam.image_height {
-            print!("\rScanlines remaining: {} ", (cam.image_height - j));
-            for i in 0..cam.image_width {
-                pixel_color = Color::new(0.0, 0.0, 0.0);
-                for _ in 0..cam.samples_per_pixel {
-                    r = cam.get_ray(i, j);
-                    pixel_color += Camera::ray_color(&r, cam.max_depth, world);
-                }
-
-                writeln!(
-                    image_file,
-                    "{}",
-                    write_color(&(cam.pixel_samples_scale * pixel_color))
-                )
-                .expect("Failed to write to image.ppm");
+    let mut r: Ray;
+    let mut pixel_color: Color;
+    for j in 0..cam.image_height {
+        print!("\rScanlines remaining: {} ", (cam.image_height - j));
+        for i in 0..cam.image_width {
+            pixel_color = Color::new(0.0, 0.0, 0.0);
+            for _ in 0..cam.samples_per_pixel {
+                r = get_ray(cam, i, j);
+                pixel_color += ray_color(&r, cam.max_depth, world);
             }
-            std::io::stdout()
-                .flush()
-                .expect("Failed to flush to stdout");
+
+            writeln!(
+                image_file,
+                "{}",
+                write_color(&(cam.pixel_samples_scale * pixel_color))
+            )
+            .expect("Failed to write to image.ppm");
         }
-        image_file
+        std::io::stdout()
             .flush()
-            .expect("Failed to flush buffer to image.ppm");
-        print!("{:<23}", "\rDone")
+            .expect("Failed to flush to stdout");
+    }
+    image_file
+        .flush()
+        .expect("Failed to flush buffer to image.ppm");
+    print!("{:<23}", "\rDone")
+}
+
+fn ray_color(r: &Ray, depth: i32, world: &HittableList) -> Color {
+    if depth <= 0 {
+        return Color::new(0_f64, 0_f64, 0_f64);
+    }
+    let mut rec = HitRecord::default();
+    if world.hit(r, &Interval::new(0.001, INFINITY), &mut rec) {
+        let mut scattered = Ray::new(Vec3::default(), Vec3::default());
+        let mut attenuation = Color::default();
+        if rec.mat.scatter(r, &rec, &mut attenuation, &mut scattered) {
+            return attenuation * ray_color(&scattered, depth - 1, world);
+        }
+    }
+    let unit_direction = unit_vector(r.direction());
+    let a = 0.5 * (unit_direction.y() + 1.0);
+    (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
+}
+
+fn get_ray(cam: &Camera, i: i32, j: i32) -> Ray {
+        let offset = sample_square();
+        let pixel_sample = cam.pixel00_loc
+            + ((i as f64 + offset.x()) * cam.pixel_delta_u)
+            + ((j as f64 + offset.y()) * cam.pixel_delta_v);
+        let ray_origin = cam.center;
+        let ray_direction = pixel_sample - ray_origin;
+        Ray::new(ray_origin, ray_direction)
+    }
+#[inline]
+fn sample_square() -> Vec3 {
+        Vec3::new(rand_f64() - 0.5, rand_f64() - 0.5, 0.0)
     }

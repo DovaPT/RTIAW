@@ -1,6 +1,6 @@
 use std::time;
 
-use renderer::{camera::{Camera, render}, color::Color, hittable_list::HittableList, material::Material, sphere::Sphere};
+use renderer::{camera::{render, Camera}, color::Color, hittable_list::HittableList, material::Material, sphere::Sphere};
 
 fn main() {
     let timer: time::Instant = time::Instant::now();
@@ -21,7 +21,7 @@ fn main() {
     world.add(Sphere::new([-1.0, 0.0, -1.0], 0.4, material_bubble));
     world.add(Sphere::new([1.0, 0.0, -1.0], 0.5, material_right));
 
-    let mut cam = Camera{ aspect_ratio: 16.0 / 9.0, image_width: 1920, max_depth: 50, samples_per_pixel: 1000, ..Default::default()};
+    let mut cam = Camera{ aspect_ratio: 16.0 / 9.0, image_width: 1920, samples_per_pixel: 1000, max_depth: 50, ..Default::default()};
     cam.init();
     render(&mut cam,&mut image_file, &world);
 

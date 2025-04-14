@@ -25,15 +25,15 @@ impl HittableList{
 impl Hittable for HittableList {
 
     fn hit(&self, r: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool {
-        let temp_rec = &mut HitRecord::blank();
+        let mut temp_rec = HitRecord::blank();
         let mut hit_anything = false;
         let mut closest_so_far = ray_t.max;
         for object in &self.objects {
             let temp_ray_t = Interval::new(ray_t.min, closest_so_far);
-            if object.hit(r, &temp_ray_t, temp_rec) {
+            if object.hit(r, &temp_ray_t,&mut temp_rec) {
                 hit_anything = true;
                 closest_so_far = temp_rec.t;
-                temp_rec.clone_into(rec);
+                *rec = temp_rec;
             }
         }
         hit_anything

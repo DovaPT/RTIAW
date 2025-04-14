@@ -1,44 +1,42 @@
-use core::f64;
+use crate::refract;
 
 use crate::{
     color::Color,
     hittable::HitRecord,
     rand_f64,
     ray::Ray,
-    vec3::{dot, random_unit_vector, reflect, refract, unit_vector},
+    vec3::{dot, random_unit_vector, reflect, unit_vector},
 };
-
 #[derive(Clone, Copy)]
 pub enum Material {
-    Lambertain { color: Color },
-    Metal { color: Color, fuzz: f64 },
+    Lambertain { albedo: Color },
+    Metal { albedo: Color, fuzz: f64 },
     Dielectric { refraction_index: f64 },
 }
 
 impl Default for Material {
     fn default() -> Self {
         Self::Lambertain {
-            color: Color::default(),
+            albedo: Color::default(),
         }
     }
 }
 
 impl Material {
     pub fn scatter(
-        self,
+        &self,
         r_in: &Ray,
         rec: &HitRecord,
         attenuation: &mut Color,
         scattered: &mut Ray,
     ) -> bool {
-        match self {
-            Material::Lambertain { color: albedo } => {
+        match *self {
+            Material::Lambertain { albedo } => {
                 scatter_lambertian(&albedo, rec, attenuation, scattered)
             }
-            Material::Metal {
-                color: albedo,
-                mut fuzz,
-            } => scatter_metal(&albedo, &mut fuzz, r_in, rec, attenuation, scattered),
+            Material::Metal { albedo, mut fuzz } => {
+                scatter_metal(&albedo, &mut fuzz, r_in, rec, attenuation, scattered)
+            }
             Material::Dielectric { refraction_index } => {
                 scatter_dielectric(&refraction_index, r_in, attenuation, rec, scattered)
             }
@@ -59,7 +57,7 @@ fn scatter_lambertian(
     }
 
     scattered.change(rec.p, scatter_direction);
-    attenuation.change(*albedo);
+    attenuation.change(albedo.x(), albedo.y(), albedo.z());
 
     true
 }
@@ -78,7 +76,7 @@ fn scatter_metal(
     let reflected = reflect(&r_in.dir, &rec.normal);
     let reflected = unit_vector(&reflected) + (*fuzz * random_unit_vector());
     scattered.change(rec.p, reflected);
-    attenuation.change(*albedo);
+    attenuation.change(albedo.x(), albedo.y(), albedo.z());
 
     dot(scattered.direction(), &rec.normal) > 0.0
 }
@@ -90,7 +88,7 @@ fn scatter_dielectric(
     rec: &HitRecord,
     scattered: &mut Ray,
 ) -> bool {
-    attenuation.change(Color { e: [1.0, 1.0, 1.0] });
+    attenuation.change(1.0, 1.0, 1.0);
     let ri = if rec.front_face {
         1.0 / *refraction_index
     } else {
@@ -99,13 +97,13 @@ fn scatter_dielectric(
     let unit_direction = unit_vector(r_in.direction());
 
     let cos_theta = dot(&-unit_direction, &rec.normal).min(1.0);
-    let sin_theta = 1.0 - cos_theta * cos_theta;
+    let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
 
     let cannot_refract = ri * sin_theta > 1.0;
     let direction = if cannot_refract || reflectance(cos_theta, ri) > rand_f64() {
-        refract(&unit_direction, &rec.normal, &1.0)
+        refract!(&unit_direction, &rec.normal)
     } else {
-        refract(&unit_direction, &rec.normal, &ri)
+        refract!(&unit_direction, &rec.normal, ri)
     };
 
     scattered.change(rec.p, direction);

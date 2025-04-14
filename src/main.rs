@@ -9,11 +9,11 @@ fn main() {
     
     let mut world: HittableList = HittableList::default();
    
-    let material_ground: Material = Material::Lambertain{color: Color::new(0.8, 0.8, 0.0)};
-    let material_center: Material = Material::Lambertain{color: Color::new(0.1, 0.2, 0.5)};
+    let material_ground: Material = Material::Lambertain{albedo: Color::new(0.8, 0.8, 0.0)};
+    let material_center: Material = Material::Lambertain{albedo: Color::new(0.1, 0.2, 0.5)};
     let material_bubble: Material = Material::Dielectric{refraction_index: 1.00 / 1.50};
     let material_left: Material = Material::Dielectric{refraction_index: 1.50};
-    let material_right: Material = Material::Metal{color: Color::new(0.8, 0.6, 0.2),fuzz: 0.0};
+    let material_right: Material = Material::Metal{albedo: Color::new(0.8, 0.6, 0.2),fuzz: 0.0};
 
     world.add(Sphere::new([0.0, -100.5, -1.0], 100.0, material_ground));
     world.add(Sphere::new([0.0, 0.0, -1.2], 0.5, material_center));

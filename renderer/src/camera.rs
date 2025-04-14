@@ -43,10 +43,7 @@ impl Default for Camera {
     }
 }
 
-impl Camera {}
-
-impl Camera { 
-
+impl Camera {
     pub fn init(&mut self) {
         self.image_height = (self.image_width as f64 / self.aspect_ratio) as i32;
         self.image_height = match self.image_height {
@@ -82,13 +79,12 @@ pub fn render(cam: &mut Camera, image_file: &mut File, world: &HittableList) {
         cam.image_width, cam.image_height
     )
     .expect("Failed to write to image.ppm");
-
+    let mut pixel_color: Color = Color::new(0.0, 0.0, 0.0);
     let mut r: Ray;
-    let mut pixel_color: Color;
     for j in 0..cam.image_height {
         print!("\rScanlines remaining: {} ", (cam.image_height - j));
         for i in 0..cam.image_width {
-            pixel_color = Color::new(0.0, 0.0, 0.0);
+            pixel_color.change(0.0, 0.0, 0.0);
             for _ in 0..cam.samples_per_pixel {
                 r = get_ray(cam, i, j);
                 pixel_color += ray_color(&r, cam.max_depth, world);
@@ -129,15 +125,14 @@ fn ray_color(r: &Ray, depth: i32, world: &HittableList) -> Color {
 }
 
 fn get_ray(cam: &Camera, i: i32, j: i32) -> Ray {
-        let offset = sample_square();
-        let pixel_sample = cam.pixel00_loc
-            + ((i as f64 + offset.x()) * cam.pixel_delta_u)
-            + ((j as f64 + offset.y()) * cam.pixel_delta_v);
-        let ray_origin = cam.center;
-        let ray_direction = pixel_sample - ray_origin;
-        Ray::new(ray_origin, ray_direction)
-    }
-#[inline]
+    let offset = sample_square();
+    let pixel_sample = cam.pixel00_loc
+        + ((i as f64 + offset.x()) * cam.pixel_delta_u)
+        + ((j as f64 + offset.y()) * cam.pixel_delta_v);
+    let ray_origin = cam.center;
+    let ray_direction = pixel_sample - ray_origin;
+    Ray::new(ray_origin, ray_direction)
+}
 fn sample_square() -> Vec3 {
-        Vec3::new(rand_f64() - 0.5, rand_f64() - 0.5, 0.0)
-    }
+    Vec3::new(rand_f64() - 0.5, rand_f64() - 0.5, 0.0)
+}

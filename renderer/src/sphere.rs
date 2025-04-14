@@ -1,6 +1,6 @@
 use crate::{hittable::{HitRecord, Hittable}, internal::Interval, material::Material, ray::Ray, vec3::{dot, Vec3, Point3}};
 
-#[derive(Clone, Copy, Default)]
+#[derive(Default, Clone, Copy)]
 pub struct Sphere {
     center: Point3,
     radius: f64,

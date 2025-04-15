@@ -1,12 +1,5 @@
 use crate::{
-    INFINITY,
-    color::{Color, write_color},
-    hittable::{HitRecord, Hittable},
-    hittable_list::HittableList,
-    internal::Interval,
-    rand_f64,
-    ray::Ray,
-    vec3::{Point3, Vec3, unit_vector},
+    color::{write_color, Color}, hittable::{HitRecord, Hittable}, hittable_list::HittableList, internal::Interval, rand_f64, ray::Ray, vec3::{cross, unit_vector, Point3, Vec3}, INFINITY
 };
 
 use std::{fs::File, io::Write};
@@ -17,13 +10,20 @@ pub struct Camera {
     pub image_width: i32,       // Rendered image width in pixel count
     pub samples_per_pixel: i32, // Count of random samples for each pixel
     pub max_depth: i32,
+    pub vfov: f64,
+    pub look_from: Point3,
+    pub look_at: Point3,
+    pub vup: Vec3,
     // Private
-    pub image_height: i32,        // Rendered image height
-    pub pixel_samples_scale: f64, // Color scale factor for a sum of pixel samples
-    pub center: Point3,           // Camera height
-    pub pixel00_loc: Point3,      // Location of pixel at 0, 0
-    pub pixel_delta_u: Vec3,      // Offset to pixel to the right
-    pub pixel_delta_v: Vec3,      // Offset to pixel below
+    pub(super) image_height: i32,        // Rendered image height
+    pub(super) pixel_samples_scale: f64, // Color scale factor for a sum of pixel samples
+    pub(super) center: Point3,           // Camera height
+    pub(super) pixel00_loc: Point3,      // Location of pixel at 0, 0
+    pub(super) pixel_delta_u: Vec3,      // Offset to pixel to the right
+    pub(super) pixel_delta_v: Vec3,      // Offset to pixel below
+    pub(super) u: Vec3,
+    pub(super) v: Vec3,
+    pub(super) w: Vec3,
 }
 
 impl Default for Camera {
@@ -33,18 +33,25 @@ impl Default for Camera {
             image_width: 100,
             samples_per_pixel: 10,
             max_depth: 10,
-            image_height: i32::default(),
-            pixel_samples_scale: f64::default(),
-            center: Point3::default(),
-            pixel00_loc: Point3::default(),
-            pixel_delta_u: Vec3::default(),
-            pixel_delta_v: Vec3::default(),
+            vfov: 90.0,
+            look_from: Point3::new(0.0, 0.0, 0.0),
+            look_at: Point3::new(0.0, 0.0, -1.0),
+            vup: Vec3::new(0.0, 1.0, 0.0),
+            image_height: Default::default(),
+            pixel00_loc: Default::default(),
+            pixel_delta_v: Default::default(),
+            pixel_delta_u: Default::default(),
+            pixel_samples_scale: Default::default(),
+            center: Default::default(),
+            u: Default::default(),
+            v: Default::default(),
+            w: Default::default(),
         }
     }
 }
 
 impl Camera {
-    pub fn init(&mut self) {
+    fn init(&mut self) {
         self.image_height = (self.image_width as f64 / self.aspect_ratio) as i32;
         self.image_height = match self.image_height {
             x if x < 1 => 1,
@@ -52,27 +59,34 @@ impl Camera {
         };
 
         self.pixel_samples_scale = 1.0 / self.samples_per_pixel as f64;
+
+        self.center = self.look_from;
         // Determine viewport dimensions
-        let focal_length = 1.0;
-        let viewport_height = 2.0;
+        let focal_length = (self.look_from - self.look_at).len();
+        let theta = self.vfov.to_radians();
+        let h = (theta / 2.0).tan();
+        let viewport_height = 2.0 * h * focal_length;
         let viewport_width = viewport_height * (self.image_width as f64 / self.image_height as f64);
 
+        self.w = unit_vector(&(self.look_from - self.look_at));
+        self.u = unit_vector(&cross(&self.vup, &self.w));
+        self.v = cross(&self.w, &self.u);
         // Calc vectors across horizontal and down vertical viewport edges
-        let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
-        let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
+        let viewport_u = viewport_width * self.u;
+        let viewport_v = viewport_height * -self.v;
 
         // Calc the Horizontal and vertical delta vectors form pixel to pixel
         self.pixel_delta_u = viewport_u / self.image_width as f64;
         self.pixel_delta_v = viewport_v / self.image_height as f64;
 
         //calc location up upper left pixel
-        let viewport_upper_left =
-            self.center - Vec3::new(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
+        let viewport_upper_left = self.center - (focal_length * self.w) - viewport_u / 2.0 - viewport_v / 2.0;
         self.pixel00_loc = viewport_upper_left + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);
     }
 }
 
 pub fn render(cam: &mut Camera, image_file: &mut File, world: &HittableList) {
+    cam.init();
     write!(
         image_file,
         "P3\n {} {}\n255\n",
@@ -118,6 +132,7 @@ fn ray_color(r: &Ray, depth: i32, world: &HittableList) -> Color {
         if rec.mat.scatter(r, &rec, &mut attenuation, &mut scattered) {
             return attenuation * ray_color(&scattered, depth - 1, world);
         }
+        return Color::new(0.0, 0.0, 0.0);
     }
     let unit_direction = unit_vector(r.direction());
     let a = 0.5 * (unit_direction.y() + 1.0);

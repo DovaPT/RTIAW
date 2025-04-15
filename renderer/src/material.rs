@@ -1,11 +1,10 @@
-use crate::refract;
 
 use crate::{
     color::Color,
     hittable::HitRecord,
     rand_f64,
     ray::Ray,
-    vec3::{dot, random_unit_vector, reflect, unit_vector},
+    vec3::{dot, random_unit_vector, reflect, refract, unit_vector},
 };
 #[derive(Clone, Copy)]
 pub enum Material {
@@ -101,9 +100,9 @@ fn scatter_dielectric(
 
     let cannot_refract = ri * sin_theta > 1.0;
     let direction = if cannot_refract || reflectance(cos_theta, ri) > rand_f64() {
-        refract!(&unit_direction, &rec.normal)
+        reflect(&unit_direction, &rec.normal)
     } else {
-        refract!(&unit_direction, &rec.normal, ri)
+        refract(&unit_direction, &rec.normal, &ri)
     };
 
     scattered.change(rec.p, direction);

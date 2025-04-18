@@ -12,7 +12,7 @@ pub fn linear_to_gamma(linear_component: f64) -> f64 {
 }
 
 pub fn write_color(pixel_color: &Color) -> String {
-    let intensity = Interval::new(0.0, 0.999);
+    let intensity = Interval::new(0.0, &0.999);
 
     let rbyte = (256.0 * intensity.clamp(linear_to_gamma(pixel_color.x()))) as i32;
     let gbyte = (256.0 * intensity.clamp(linear_to_gamma(pixel_color.y()))) as i32;

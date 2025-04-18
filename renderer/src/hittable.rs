@@ -4,7 +4,6 @@ use crate::internal::Interval;
 use crate::ray::Ray;
 use crate::vec3::{Point3, Vec3, dot};
 use crate::material::{Lambertain, Material};
-#[derive(Clone)]
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
@@ -30,12 +29,12 @@ impl HitRecord {
         }
     }
 
-    pub fn set_face_normal(&mut self, r: &Ray, outward_normal: &Vec3) {
-        self.front_face = dot(r.direction(), outward_normal) < 0.0;
+    pub fn set_face_normal(&mut self, r: &Ray, outward_normal: Vec3) {
+        self.front_face = dot(r.direction(), &outward_normal) < 0.0;
         self.normal = if self.front_face {
-            *outward_normal
+            outward_normal
         } else {
-            -(*outward_normal)
+            -outward_normal
         };
     }
 }

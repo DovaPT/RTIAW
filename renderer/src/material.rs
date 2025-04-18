@@ -34,13 +34,13 @@ impl Material for Lambertain {
         attenuation: &mut Color,
         scattered: &mut Ray,
     ) -> bool {
-        let mut scatter_direction = rec.normal + random_unit_vector();
+        let mut scatter_direction = &(&rec.normal + random_unit_vector());
 
         if scatter_direction.near_zero() {
-            scatter_direction = rec.normal;
+            scatter_direction = &rec.normal;
         }
 
-        scattered.change(rec.p, scatter_direction);
+        scattered.change(&rec.p, &scatter_direction);
         attenuation.change(self.albedo.x(), self.albedo.y(), self.albedo.z());
 
         true
@@ -68,7 +68,7 @@ impl Material for Metal {
     ) -> bool {
         let reflected = reflect(&r_in.dir, &rec.normal);
         let reflected = unit_vector(&reflected) + (self.fuzz * random_unit_vector());
-        scattered.change(rec.p, reflected);
+        scattered.change(&rec.p, &reflected);
         attenuation.change(self.albedo.x(), self.albedo.y(), self.albedo.z());
 
         dot(scattered.direction(), &rec.normal) > 0.0
@@ -100,7 +100,7 @@ impl Material for Dielectric {
         };
         let unit_direction = unit_vector(r_in.direction());
 
-        let cos_theta = dot(&-unit_direction, &rec.normal).min(1.0);
+        let cos_theta = dot(&-&unit_direction, &rec.normal).min(1.0);
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
 
         let cannot_refract = ri * sin_theta > 1.0;
@@ -110,7 +110,7 @@ impl Material for Dielectric {
             refract(&unit_direction, &rec.normal, &ri)
         };
 
-        scattered.change(rec.p, direction);
+        scattered.change(&rec.p, &direction);
 
         true
     }

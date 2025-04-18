@@ -15,8 +15,8 @@ impl Default for Interval {
 }
 
 impl Interval {
-    pub fn new(min: f64, max: f64) -> Self {
-        Self { min, max }
+    pub fn new(min: f64, max: &f64) -> Self {
+        Self { min, max: *max }
     }
 
     pub fn clamp(&self, x: f64) -> f64 {

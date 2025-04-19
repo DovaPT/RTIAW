@@ -16,6 +16,30 @@ pub trait Material {
     ) -> bool;
 }
 
+#[derive(Clone, Copy)]
+pub enum Mat{
+    Metal(Metal),
+    Lambertain(Lambertain),
+    Dielectric(Dielectric),
+}
+
+impl Material for Mat {
+    fn scatter(
+            &self,
+            r_in: &Ray,
+            rec: &HitRecord,
+            attenuation: &mut Color,
+            scattered: &mut Ray,
+        ) -> bool {
+        match self {
+            Mat::Lambertain(mat) => mat.scatter(r_in, rec, attenuation, scattered),
+            Mat::Metal(mat) => mat.scatter(r_in, rec, attenuation, scattered),
+            Mat::Dielectric(mat) => mat.scatter(r_in, rec, attenuation, scattered)
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
 pub struct Lambertain {
     albedo: Color,
 }
@@ -34,19 +58,20 @@ impl Material for Lambertain {
         attenuation: &mut Color,
         scattered: &mut Ray,
     ) -> bool {
-        let mut scatter_direction = &(&rec.normal + random_unit_vector());
+        let mut scatter_direction = &(rec.normal + random_unit_vector());
 
         if scatter_direction.near_zero() {
             scatter_direction = &rec.normal;
         }
 
-        scattered.change(&rec.p, &scatter_direction);
+        scattered.change(&rec.p, scatter_direction);
         attenuation.change(self.albedo.x(), self.albedo.y(), self.albedo.z());
 
         true
     }
 }
 
+#[derive(Clone,Copy)]
 pub struct Metal {
     albedo: Color,
     fuzz: f64,
@@ -74,7 +99,7 @@ impl Material for Metal {
         dot(scattered.direction(), &rec.normal) > 0.0
     }
 }
-
+#[derive(Clone, Copy)]
 pub struct Dielectric {
     refraction_index: f64,
 }

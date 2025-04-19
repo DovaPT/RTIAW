@@ -1,3 +1,4 @@
+use crate::material::Material;
 use crate::{
     color::{write_color, Color}, hittable::{HitRecord, Hittable}, hittable_list::HittableList, internal::Interval, rand_f64, ray::Ray, vec3::{cross, random_in_unit_disk, unit_vector, Point3, Vec3}, INFINITY
 };
@@ -26,7 +27,7 @@ pub struct Camera {
     pub(super) v: Vec3,
     pub(super) w: Vec3,
     pub(super) defocus_disk_u: Vec3,
-    pub(super) defocus_disk_v:Vec3,
+    pub(super) defocus_disk_v: Vec3,
 }
 
 impl Default for Camera {
@@ -83,7 +84,8 @@ impl Camera {
         self.pixel_delta_v = viewport_v / self.image_height as f64;
 
         //calc location up upper left pixel
-        let viewport_upper_left = &self.look_from - (self.focus_dist * &self.w) - viewport_u / 2.0 - viewport_v / 2.0;
+        let viewport_upper_left =
+            &self.look_from - (self.focus_dist * &self.w) - viewport_u / 2.0 - viewport_v / 2.0;
         self.pixel00_loc = viewport_upper_left + 0.5 * (&self.pixel_delta_u + &self.pixel_delta_v);
 
         let defocus_radius = self.focus_dist * (self.defocus_angle / 2.0).to_degrees().tan();
@@ -149,7 +151,11 @@ fn get_ray(cam: &Camera, i: i32, j: i32) -> Ray {
     let pixel_sample = &cam.pixel00_loc
         + ((i as f64 + offset.x()) * &cam.pixel_delta_u)
         + ((j as f64 + offset.y()) * &cam.pixel_delta_v);
-    let ray_origin = if cam.defocus_angle <= 0.0 {&cam.look_from} else {&defocus_disk_sample(cam)};
+    let ray_origin = if cam.defocus_angle <= 0.0 {
+        &cam.look_from
+    } else {
+        &defocus_disk_sample(cam)
+    };
     let ray_direction = pixel_sample - ray_origin;
     Ray::new(ray_origin, &ray_direction)
 }

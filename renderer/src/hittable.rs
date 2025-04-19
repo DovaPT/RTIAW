@@ -1,20 +1,19 @@
-use std::rc::Rc;
 use crate::color::Color;
 use crate::internal::Interval;
 use crate::ray::Ray;
 use crate::vec3::{Point3, Vec3, dot};
-use crate::material::{Lambertain, Material};
+use crate::material::{Lambertain, Mat};
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
     pub t: f64,
     pub front_face: bool,
-    pub mat: Rc<dyn Material>, 
+    pub mat: Mat, 
 }
 
 impl Default for HitRecord {
     fn default() -> Self {
-        Self { p: Point3::default(), normal: Vec3::default(), t: 0.0, front_face: true, mat: Rc::new(Lambertain::new(Color::default())) }
+        Self { p: Point3::default(), normal: Vec3::default(), t: 0.0, front_face: true, mat: Mat::Lambertain(Lambertain::new(Color::default())) }
     }
 }
 
@@ -25,7 +24,7 @@ impl HitRecord {
             normal,
             t,
             front_face: true,
-            mat: Rc::new(Lambertain::new( Color::default())),
+            mat: Mat::Lambertain(Lambertain::new(Color::default())),
         }
     }
 

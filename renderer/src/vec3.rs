@@ -57,6 +57,14 @@ impl Vec3 {
     }
 }
 
+impl Clone for Vec3 {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl Copy for Vec3 {}
+
 impl std::ops::Index<usize> for Vec3 {
     type Output = f64;
     fn index(&self, index: usize) -> &Self::Output {

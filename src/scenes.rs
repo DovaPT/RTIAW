@@ -1,3 +1,5 @@
+use std::process;
+
 use renderer::material::Mat;
 use renderer::material::Dielectric;
 use renderer::material::Lambertain;
@@ -14,7 +16,7 @@ use renderer::{
 };
 
 
-pub fn scene1(image_file: &mut std::fs::File) {
+pub fn scene1() {
     let mut world: HittableList = HittableList::default();
 
     let ground_material = Mat::Lambertain(Lambertain::new(Color::new(0.5, 0.5, 0.5)));
@@ -64,10 +66,13 @@ pub fn scene1(image_file: &mut std::fs::File) {
     cam.look_from = Point3::new(13.0, 2.0, 3.0);
     cam.look_at = Point3::new(0.0, 0.0, 0.0);
     cam.vup = Vec3::new(0.0, 1.0, 0.0);
-    render(&mut cam, image_file, &world);
+    if let Err(e) = render(&mut cam, "scene1.ppm", &world){
+        println!("Encountered Error: {}", e);
+        process::exit(1);
+    };
 }
 
-pub fn scene2(image_file: &mut std::fs::File) {
+pub fn scene2() {
     let mut world = HittableList::default();
     world.add(Sphere::new(
         [0.0, -30.0, 0.0],
@@ -87,5 +92,8 @@ pub fn scene2(image_file: &mut std::fs::File) {
     cam.look_at = Point3::new(0.0, 0.3, 0.0);
     cam.vfov = 15.0;
     cam.vup = Vec3::new(0.0,1.0,0.0);
-    render(&mut cam, image_file, &world);
+    if let Err(e) = render(&mut cam, "scene2.ppm", &world){
+        println!("Encountered Error: {}", e);
+        process::exit(1);
+    };
 }

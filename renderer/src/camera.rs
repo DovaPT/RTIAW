@@ -1,9 +1,17 @@
 use crate::material::Material;
 use crate::{
-    color::{write_color, Color}, hittable::{HitRecord, Hittable}, hittable_list::HittableList, internal::Interval, rand_f64, ray::Ray, vec3::{cross, random_in_unit_disk, unit_vector, Point3, Vec3}, INFINITY
+    INFINITY,
+    color::{Color, write_color},
+    hittable::{HitRecord, Hittable},
+    hittable_list::HittableList,
+    internal::Interval,
+    rand_f64,
+    ray::Ray,
+    vec3::{Point3, Vec3, cross, random_in_unit_disk, unit_vector},
 };
-
-use std::{fs::File, io::Write};
+use std::io::Write;
+use std::fs::File;
+use std::error::Error;
 
 pub struct Camera {
     // Public
@@ -72,11 +80,11 @@ impl Camera {
         let viewport_height = 2.0 * h * self.focus_dist;
         let viewport_width = viewport_height * (self.image_width as f64 / self.image_height as f64);
 
-        self.w = unit_vector(&(&self.look_from - &self.look_at));
+        self.w = unit_vector(&(self.look_from - self.look_at));
         self.u = unit_vector(&cross(&self.vup, &self.w));
         self.v = cross(&self.w, &self.u);
         // Calc vectors across horizontal and down vertical viewport edges
-        let viewport_u = &(viewport_width * &self.u);
+        let viewport_u = &(viewport_width * self.u);
         let viewport_v = &(viewport_height * -&self.v);
 
         // Calc the Horizontal and vertical delta vectors form pixel to pixel
@@ -85,23 +93,27 @@ impl Camera {
 
         //calc location up upper left pixel
         let viewport_upper_left =
-            &self.look_from - (self.focus_dist * &self.w) - viewport_u / 2.0 - viewport_v / 2.0;
-        self.pixel00_loc = viewport_upper_left + 0.5 * (&self.pixel_delta_u + &self.pixel_delta_v);
+            self.look_from - (self.focus_dist * self.w) - viewport_u / 2.0 - viewport_v / 2.0;
+        self.pixel00_loc = viewport_upper_left + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);
 
         let defocus_radius = self.focus_dist * (self.defocus_angle / 2.0).to_degrees().tan();
-        self.defocus_disk_u = &self.u * defocus_radius;
-        self.defocus_disk_v = &self.v * defocus_radius;
+        self.defocus_disk_u = self.u * defocus_radius;
+        self.defocus_disk_v = self.v * defocus_radius;
     }
 }
 
-pub fn render(cam: &mut Camera, image_file: &mut File, world: &HittableList) {
+pub fn render(
+    cam: &mut Camera,
+    file_name: &str,
+    world: &HittableList,
+) -> Result<(), Box<dyn Error>> {
     cam.init();
+    let mut image_file = File::open(file_name)?;
     write!(
         image_file,
         "P3\n {} {}\n255\n",
         cam.image_width, cam.image_height
-    )
-    .expect("Failed to write to image.ppm");
+    )?;
     for j in 0..cam.image_height {
         print!("\rScanlines remaining: {} ", (cam.image_height - j));
         for i in 0..cam.image_width {
@@ -115,17 +127,13 @@ pub fn render(cam: &mut Camera, image_file: &mut File, world: &HittableList) {
                 image_file,
                 "{}",
                 write_color(&(cam.pixel_samples_scale * pixel_color))
-            )
-            .expect("Failed to write to image.ppm");
+            )?;
         }
-        std::io::stdout()
-            .flush()
-            .expect("Failed to flush to stdout");
+        std::io::stdout().flush()?;
     }
-    image_file
-        .flush()
-        .expect("Failed to flush buffer to image.ppm");
-    print!("{:<23}", "\rDone")
+    image_file.flush()?;
+    print!("{:<23}", "\rDone");
+    Ok(())
 }
 
 fn ray_color(r: &Ray, depth: i32, world: &HittableList) -> Color {
@@ -148,9 +156,9 @@ fn ray_color(r: &Ray, depth: i32, world: &HittableList) -> Color {
 
 fn get_ray(cam: &Camera, i: i32, j: i32) -> Ray {
     let offset = sample_square();
-    let pixel_sample = &cam.pixel00_loc
-        + ((i as f64 + offset.x()) * &cam.pixel_delta_u)
-        + ((j as f64 + offset.y()) * &cam.pixel_delta_v);
+    let pixel_sample = cam.pixel00_loc
+        + ((i as f64 + offset.x()) * cam.pixel_delta_u)
+        + ((j as f64 + offset.y()) * cam.pixel_delta_v);
     let ray_origin = if cam.defocus_angle <= 0.0 {
         &cam.look_from
     } else {
@@ -162,7 +170,7 @@ fn get_ray(cam: &Camera, i: i32, j: i32) -> Ray {
 
 fn defocus_disk_sample(cam: &Camera) -> Point3 {
     let p = random_in_unit_disk();
-    &cam.look_from + (p[0] * &cam.defocus_disk_u) + (p[1] * &cam.defocus_disk_v)
+    cam.look_from + (p[0] * cam.defocus_disk_u) + (p[1] * cam.defocus_disk_v)
 }
 
 fn sample_square() -> Vec3 {

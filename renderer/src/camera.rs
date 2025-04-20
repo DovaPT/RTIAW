@@ -108,7 +108,7 @@ pub fn render(
     world: &HittableList,
 ) -> Result<(), Box<dyn Error>> {
     cam.init();
-    let mut image_file = File::open(file_name)?;
+    let mut image_file = File::create(file_name)?;
     write!(
         image_file,
         "P3\n {} {}\n255\n",

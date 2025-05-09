@@ -110,7 +110,7 @@ pub fn render(
     world: &HittableList,
 ) -> Result<(), Box<dyn Error>> {
     cam.init();
-    let mut image_file = File::create(file_name)?;
+    let mut image_file = std::io::BufWriter::new(File::create(file_name)?);
     write!(
         image_file,
         "P3\n {} {}\n255\n",
@@ -120,8 +120,9 @@ pub fn render(
         print!("\rScanlines remaining: {} ", (cam.image_height - j));
         let mut res = vec![String::new(); cam.image_width.try_into().unwrap()];
         let jobs = Mutex::new((0..cam.image_width).zip(res.iter_mut()));
-        std::thread::scope(|scope| {
-            for _ in 0..5 {
+        let count = thread::available_parallelism()?.get() / 2;
+        thread::scope(|scope| {
+            for _ in 0..count.max(1) {
                 scope.spawn(|| {
                     let next = || jobs.lock().unwrap().next();
                     while let Some((i, o)) = next() {

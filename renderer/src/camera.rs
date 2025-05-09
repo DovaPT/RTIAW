@@ -9,9 +9,11 @@ use crate::{
     ray::Ray,
     vec3::{Point3, Vec3, cross, random_in_unit_disk, unit_vector},
 };
-use std::io::Write;
-use std::fs::File;
 use std::error::Error;
+use std::fs::File;
+use std::io::Write;
+use std::sync::Mutex;
+use std::thread;
 
 pub struct Camera {
     // Public
@@ -116,18 +118,25 @@ pub fn render(
     )?;
     for j in 0..cam.image_height {
         print!("\rScanlines remaining: {} ", (cam.image_height - j));
-        for i in 0..cam.image_width {
-            let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-            for _ in 0..cam.samples_per_pixel {
-                let r = get_ray(cam, i, j);
-                pixel_color += ray_color(&r, cam.max_depth, world);
+        let mut res = vec![String::new(); cam.image_width.try_into().unwrap()];
+        let jobs = Mutex::new((0..cam.image_width).zip(res.iter_mut()));
+        std::thread::scope(|scope| {
+            for _ in 0..5 {
+                scope.spawn(|| {
+                    let next = || jobs.lock().unwrap().next();
+                    while let Some((i, o)) = next() {
+                        let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+                        for _ in 0..cam.samples_per_pixel {
+                            let r = get_ray(cam, i, j);
+                            pixel_color += ray_color(&r, cam.max_depth, world);
+                        }
+                        *o = write_color(&(pixel_color * cam.pixel_samples_scale));
+                    }
+                });
             }
-
-            writeln!(
-                image_file,
-                "{}",
-                write_color(&(cam.pixel_samples_scale * pixel_color))
-            )?;
+        });
+        for ele in res {
+            writeln!(image_file, "{}", &ele)?;
         }
         std::io::stdout().flush()?;
     }

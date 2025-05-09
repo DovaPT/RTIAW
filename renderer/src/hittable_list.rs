@@ -7,7 +7,7 @@ use std::boxed::Box;
 
 #[derive(Default)]
 pub struct HittableList {
-    objects: Vec<Box<dyn Hittable>>,
+    objects: Vec<Box<dyn Hittable + std::marker::Sync>>,
 }
 
 impl HittableList {
@@ -17,7 +17,7 @@ impl HittableList {
 }
 
 impl HittableList {
-    pub fn add(&mut self, object: impl Hittable + 'static) {
+    pub fn add(&mut self, object: impl Hittable + Sync + 'static) {
         self.objects.push(Box::new(object));
     }
 }

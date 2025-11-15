@@ -1,13 +1,13 @@
-use crate::ray::Ray;
 use crate::{
-    hittable::{HitRecord, Hittable},
+    hittable::HitRecord,
     internal::Interval,
+    ray::Ray,
+    sphere::Hittable,
 };
-use std::boxed::Box;
 
 #[derive(Default)]
 pub struct HittableList {
-    objects: Vec<Box<dyn Hittable + std::marker::Sync>>,
+    objects: Vec<Hittable>,
 }
 
 impl HittableList {
@@ -17,13 +17,13 @@ impl HittableList {
 }
 
 impl HittableList {
-    pub fn add(&mut self, object: impl Hittable + Sync + 'static) {
-        self.objects.push(Box::new(object));
+    pub fn add(&mut self, object: Hittable) {
+        self.objects.push(object);
     }
 }
 
-impl Hittable for HittableList {
-    fn hit(&self, r: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool {
+impl HittableList {
+    pub fn hit(&self, r: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool {
         let mut hit_anything = false;
         let mut closest_so_far = ray_t.max;
         for object in &self.objects {

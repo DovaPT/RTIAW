@@ -1,19 +1,28 @@
-use crate::material::Material;
 use crate::{
-    INFINITY,
-    color::{Color, write_color},
-    hittable::{HitRecord, Hittable},
+    color::{
+        Color,
+        write_color,
+    },
+    hittable::HitRecord,
     hittable_list::HittableList,
     internal::Interval,
     rand_f64,
     ray::Ray,
-    vec3::{Point3, Vec3, cross, random_in_unit_disk, unit_vector},
+    vec3::{
+        Point3,
+        Vec3,
+        cross,
+        random_in_unit_disk,
+        unit_vector,
+    },
 };
-use std::error::Error;
-use std::fs::File;
-use std::io::Write;
-use std::sync::Mutex;
-use std::thread;
+use std::{
+    error::Error,
+    fs::File,
+    io::Write,
+    sync::Mutex,
+    thread,
+};
 
 pub struct Camera {
     // Public
@@ -151,7 +160,7 @@ fn ray_color(r: &Ray, depth: i32, world: &HittableList) -> Color {
         return Color::new(0.0, 0.0, 0.0);
     }
     let mut rec = HitRecord::default();
-    if world.hit(r, &Interval::new(0.001, &INFINITY), &mut rec) {
+    if world.hit(r, &Interval::new(0.001, &f64::INFINITY), &mut rec) {
         let mut scattered = Ray::new(&Vec3::default(), &Vec3::default());
         let mut attenuation = Color::default();
         if rec.mat.scatter(r, &rec, &mut attenuation, &mut scattered) {

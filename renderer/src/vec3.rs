@@ -1,4 +1,7 @@
-use crate::{rand_f64, rand_range_f64};
+use crate::{
+    rand_f64,
+    rand_range_f64,
+};
 
 pub type Point3 = Vec3;
 
@@ -203,7 +206,7 @@ impl std::ops::Mul<Vec3> for &Vec3 {
     }
 }
 
-impl std::ops::Mul for &Vec3{
+impl std::ops::Mul for &Vec3 {
     type Output = Vec3;
     fn mul(self, rhs: Self) -> Self::Output {
         Vec3 {

@@ -1,8 +1,14 @@
-use crate::color::Color;
-use crate::internal::Interval;
-use crate::material::Mat;
-use crate::ray::Ray;
-use crate::vec3::{Point3, Vec3, dot};
+use crate::{
+    color::Color,
+    material::Mat,
+    ray::Ray,
+    vec3::{
+        Point3,
+        Vec3,
+        dot,
+    },
+};
+
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
@@ -46,8 +52,4 @@ impl HitRecord {
             -outward_normal
         };
     }
-}
-
-pub trait Hittable {
-    fn hit(&self, r: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool;
 }

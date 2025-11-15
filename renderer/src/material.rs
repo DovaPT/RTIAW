@@ -3,18 +3,14 @@ use crate::{
     hittable::HitRecord,
     rand_f64,
     ray::Ray,
-    vec3::{dot, random_unit_vector, reflect, refract, unit_vector},
+    vec3::{
+        dot,
+        random_unit_vector,
+        reflect,
+        refract,
+        unit_vector,
+    },
 };
-
-pub trait Material {
-    fn scatter(
-        &self,
-        r_in: &Ray,
-        rec: &HitRecord,
-        attenuation: &mut Color,
-        scattered: &mut Ray,
-    ) -> bool;
-}
 
 #[derive(Clone, Copy)]
 pub enum Mat {
@@ -23,8 +19,8 @@ pub enum Mat {
     Dielectric { refraction_index: f64 },
 }
 
-impl Material for Mat {
-    fn scatter(
+impl Mat {
+    pub fn scatter(
         &self,
         r_in: &Ray,
         rec: &HitRecord,

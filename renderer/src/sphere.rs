@@ -1,5 +1,25 @@
+use crate::{
+    hittable::HitRecord,
+    internal::Interval,
+    material::Mat,
+    ray::Ray,
+    vec3::{
+        Point3,
+        dot,
+    },
+};
 
-use crate::{hittable::{HitRecord, Hittable}, internal::Interval, material::Mat, ray::Ray, vec3::{dot, Point3}};
+pub enum Hittable {
+    Sphere(Sphere),
+}
+
+impl Hittable {
+    pub fn hit(&self, r: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool {
+        match self {
+            Hittable::Sphere(sphere) => sphere.hit(r, ray_t, rec),
+        }
+    }
+}
 
 pub struct Sphere {
     center: Point3,
@@ -7,14 +27,15 @@ pub struct Sphere {
     mat: Mat,
 }
 
-impl Sphere  {
-     pub fn new(pos: [f64; 3], radius: f64, mat: Mat) -> Self {
+impl Sphere {
+    pub fn new(pos: [f64; 3], radius: f64, mat: Mat) -> Self {
         let radius = radius.max(0.0);
-        Self { center: Point3{e: pos}, radius, mat }
+        Self {
+            center: Point3 { e: pos },
+            radius,
+            mat,
+        }
     }
-}
-
-impl Hittable for Sphere {
 
     fn hit(&self, r: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool {
         let oc: Point3 = self.center - r.origin();

@@ -1,4 +1,7 @@
-use std::{env, time};
+use std::{
+    env,
+    time,
+};
 
 fn main() -> Result<(), String> {
     let timer: time::Instant = time::Instant::now();
@@ -11,7 +14,7 @@ fn main() -> Result<(), String> {
         rtiaw::scenes::scene1();
     } else if scene == "scene2" {
         rtiaw::scenes::scene2();
-    }else {
+    } else {
         return Err("Enter scene1 or scene2".to_string());
     }
 

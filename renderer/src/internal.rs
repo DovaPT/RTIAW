@@ -1,5 +1,3 @@
-use crate::INFINITY;
-
 pub struct Interval {
     pub min: f64,
     pub max: f64,
@@ -8,8 +6,8 @@ pub struct Interval {
 impl Default for Interval {
     fn default() -> Self {
         Self {
-            min: INFINITY,
-            max: -INFINITY,
+            min: f64::INFINITY,
+            max: -f64::INFINITY,
         }
     }
 }
@@ -38,11 +36,11 @@ impl Interval {
     }
 
     pub const EMPTY: Interval = Interval {
-        min: INFINITY,
-        max: -INFINITY,
+        min: f64::INFINITY,
+        max: -f64::INFINITY,
     };
     pub const UNIVERSE: Interval = Interval {
-        min: -INFINITY,
-        max: INFINITY,
+        min: -f64::INFINITY,
+        max: f64::INFINITY,
     };
 }

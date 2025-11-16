@@ -113,10 +113,10 @@ impl Camera {
     }
 }
 
-pub fn render(
+pub fn render<const L: usize>(
     cam: &mut Camera,
     file_name: &str,
-    world: &HittableList,
+    world: &HittableList<L>,
 ) -> Result<(), Box<dyn Error>> {
     cam.init();
     let mut image_file = std::io::BufWriter::new(File::create(file_name)?);
@@ -155,7 +155,7 @@ pub fn render(
     Ok(())
 }
 
-fn ray_color(r: &Ray, depth: i32, world: &HittableList) -> Color {
+fn ray_color<const L: usize>(r: &Ray, depth: i32, world: &HittableList<L>) -> Color {
     if depth <= 0 {
         return Color::new(0.0, 0.0, 0.0);
     }

@@ -5,24 +5,34 @@ use crate::{
     sphere::Hittable,
 };
 
-#[derive(Default)]
-pub struct HittableList {
-    objects: Vec<Hittable>,
+pub struct HittableList<const L: usize> {
+    i: usize,
+    objects: [Hittable; L],
 }
 
-impl HittableList {
+impl<const L: usize> HittableList<L> {
     pub fn clear(&mut self) {
-        self.objects.clear()
+        self.i = 0;
+        self.objects.fill(Hittable::Empty);
+    }
+    pub fn new() -> Self{
+        let objects = [Hittable::Empty; L];
+        let i = 0;
+        return Self{i,objects}
     }
 }
 
-impl HittableList {
+impl<const L: usize> HittableList<L> {
     pub fn add(&mut self, object: Hittable) {
-        self.objects.push(object);
+        if self.i >= self.objects.len(){
+            panic!("out of bounds");
+        }
+        self.objects[self.i] = object;
+        self.i += 1;
     }
 }
 
-impl HittableList {
+impl<const L: usize> HittableList<L> {
     pub fn hit(&self, r: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool {
         let mut hit_anything = false;
         let mut closest_so_far = ray_t.max;

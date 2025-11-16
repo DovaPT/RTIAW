@@ -20,7 +20,7 @@ use std::{
     error::Error,
     fs::File,
     io::Write,
-    sync::Mutex,
+    sync::{Arc, Mutex},
     thread,
 };
 
@@ -125,20 +125,25 @@ pub fn render<const L: usize>(
         "P3\n {} {}\n255\n",
         cam.image_width, cam.image_height
     )?;
+    let cam = Arc::new(cam);
+    let world = Arc::new(world);
     for j in 0..cam.image_height {
         print!("\rScanlines remaining: {} ", (cam.image_height - j));
         let mut res = vec![String::new(); cam.image_width.try_into().unwrap()];
-        let jobs = Mutex::new((0..cam.image_width).zip(res.iter_mut()));
+        let jobs =    Arc::new(Mutex::new((0..cam.image_width).zip(res.iter_mut())));
         let count = thread::available_parallelism()?.get() / 2;
         thread::scope(|scope| {
             for _ in 0..count.max(1) {
-                scope.spawn(|| {
+            let jobs = jobs.clone();
+            let world = world.clone();
+            let cam = cam.clone();
+                scope.spawn(move || {
                     let next = || jobs.lock().unwrap().next();
                     while let Some((i, o)) = next() {
                         let mut pixel_color = Color::new(0.0, 0.0, 0.0);
                         for _ in 0..cam.samples_per_pixel {
-                            let r = get_ray(cam, i, j);
-                            pixel_color += ray_color(&r, cam.max_depth, world);
+                            let r = get_ray(&cam, i, j);
+                            pixel_color += ray_color(&r, cam.max_depth, &world);
                         }
                         *o = write_color(&(pixel_color * cam.pixel_samples_scale));
                     }

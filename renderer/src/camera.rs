@@ -131,7 +131,7 @@ pub fn render<const L: usize>(
         print!("\rScanlines remaining: {} ", (cam.image_height - j));
         let mut res = vec![String::new(); cam.image_width.try_into().unwrap()];
         let jobs =    Arc::new(Mutex::new((0..cam.image_width).zip(res.iter_mut())));
-        let count = thread::available_parallelism()?.get() / 2;
+        let count = thread::available_parallelism()?.get();
         thread::scope(|scope| {
             for _ in 0..count.max(1) {
             let jobs = jobs.clone();

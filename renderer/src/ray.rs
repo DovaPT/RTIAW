@@ -24,7 +24,7 @@ impl Ray {
         &self.dir
     }
     pub fn at(&self, t: f64) -> Point3 {
-        &self.orig + t * &self.dir
+        self.orig + t * self.dir
     }
     pub fn change(&mut self, orig: &Point3, dir: &Vec3) {
         self.orig = Point3::new(orig[0], orig[1], orig[2]);

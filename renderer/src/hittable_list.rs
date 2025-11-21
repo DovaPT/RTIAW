@@ -10,6 +10,12 @@ pub struct HittableList<const L: usize> {
     objects: [Hittable; L],
 }
 
+impl<const L: usize> Default for HittableList<L> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<const L: usize> HittableList<L> {
     pub fn clear(&mut self) {
         self.i = 0;
@@ -18,7 +24,7 @@ impl<const L: usize> HittableList<L> {
     pub fn new() -> Self{
         let objects = [Hittable::Empty; L];
         let i = 0;
-        return Self{i,objects}
+        Self{i,objects}
     }
 }
 

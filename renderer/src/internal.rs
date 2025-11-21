@@ -24,7 +24,7 @@ impl Interval {
         if x > self.max {
             return self.max;
         }
-        return x;
+        x
     }
 
     pub fn contains(&self, x: f64) -> bool {

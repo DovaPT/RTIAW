@@ -77,7 +77,7 @@ pub fn scene1() {
     let mut cam = Camera::default();
     cam.aspect_ratio = 16.0 / 9.0;
     cam.image_width = 1200;
-    cam.samples_per_pixel = 500;
+    cam.samples_per_pixel = 50;
     cam.max_depth = 50;
     cam.vfov = 20.0;
     cam.look_from = Point3::new(13.0, 2.0, 3.0);
@@ -128,7 +128,7 @@ pub fn scene2() {
     let mut cam = Camera::default();
     cam.image_width = 2560;
     cam.aspect_ratio = 16.0 / 9.0;
-    cam.samples_per_pixel = 500;
+    cam.samples_per_pixel = 50;
     cam.max_depth = 50;
     cam.look_from = Point3::new(0.0, 1.0, 5.0);
     cam.look_at = Point3::new(0.0, 0.3, 0.0);

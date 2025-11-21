@@ -3,8 +3,11 @@ name = "rtiaw"
 version = "0.1.0"
 edition = "2024"
 
-[dependencies]
-renderer = {path = "./renderer/"}
-
 [profile.dev]
 opt-level = 1
+
+[[example]]
+name = "genscenes"
+
+[dependencies]
+rand = "0.9.2"

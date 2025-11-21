@@ -1,7 +1,5 @@
-use std::{
-    env,
-    time,
-};
+use std::{env, time};
+mod scenes;
 
 fn main() -> Result<(), String> {
     let timer: time::Instant = time::Instant::now();
@@ -11,9 +9,9 @@ fn main() -> Result<(), String> {
     }
     let scene = &args[1];
     if scene == "scene1" {
-        rtiaw::scenes::scene1();
+        scenes::scene1();
     } else if scene == "scene2" {
-        rtiaw::scenes::scene2();
+        scenes::scene2();
     } else {
         return Err("Enter scene1 or scene2".to_string());
     }

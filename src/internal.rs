@@ -13,10 +13,12 @@ impl Default for Interval {
 }
 
 impl Interval {
-    pub fn new(min: f64, max: &f64) -> Self {
+    #[must_use]
+    pub const fn new(min: f64, max: &f64) -> Self {
         Self { min, max: *max }
     }
 
+    #[must_use]
     pub fn clamp(&self, x: f64) -> f64 {
         if x < self.min {
             return self.min;
@@ -27,19 +29,21 @@ impl Interval {
         x
     }
 
+    #[must_use]
     pub fn contains(&self, x: f64) -> bool {
         self.min <= x && x <= self.max
     }
 
+    #[must_use]
     pub fn surrounds(&self, x: f64) -> bool {
         self.min < x && x < self.max
     }
 
-    pub const EMPTY: Interval = Interval {
+    pub const EMPTY: Self = Self {
         min: f64::INFINITY,
         max: -f64::INFINITY,
     };
-    pub const UNIVERSE: Interval = Interval {
+    pub const UNIVERSE: Self = Self {
         min: -f64::INFINITY,
         max: f64::INFINITY,
     };

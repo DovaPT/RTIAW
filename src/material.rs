@@ -28,14 +28,14 @@ impl Mat {
         scattered: &mut Ray,
     ) -> bool {
         match self {
-            Mat::Lambertain { albedo } => {
+            Self::Lambertain { albedo } => {
                 lambertain_scatter(albedo, r_in, rec, attenuation, scattered)
             }
-            Mat::Metal { albedo, fuzz } => {
-                metal_scatter(albedo, fuzz, r_in, rec, attenuation, scattered)
+            Self::Metal { albedo, fuzz } => {
+                metal_scatter(albedo, *fuzz, r_in, rec, attenuation, scattered)
             }
-            Mat::Dielectric { refraction_index } => {
-                dielectric_scatter(refraction_index, r_in, rec, attenuation, scattered)
+            Self::Dielectric { refraction_index } => {
+                dielectric_scatter(*refraction_index, r_in, rec, attenuation, scattered)
             }
         }
     }
@@ -60,7 +60,7 @@ fn lambertain_scatter(
 }
 fn metal_scatter(
     albedo: &Color,
-    fuzz: &f64,
+    fuzz: f64,
     r_in: &Ray,
     rec: &HitRecord,
     attenuation: &mut Color,
@@ -75,7 +75,7 @@ fn metal_scatter(
 }
 
 fn dielectric_scatter(
-    refraction_index: &f64,
+    refraction_index: f64,
     r_in: &Ray,
     rec: &HitRecord,
     attenuation: &mut Color,
@@ -83,9 +83,9 @@ fn dielectric_scatter(
 ) -> bool {
     attenuation.change(1.0, 1.0, 1.0);
     let ri = if rec.front_face {
-        1.0 / *refraction_index
+        1.0 / refraction_index
     } else {
-        *refraction_index
+        refraction_index
     };
     let unit_direction = unit_vector(r_in.direction());
 
@@ -107,5 +107,5 @@ fn dielectric_scatter(
 fn reflectance(cosine: f64, refraction_index: f64) -> f64 {
     let r0 = (1.0 - refraction_index) / (1.0 + refraction_index);
     let r0 = r0 * r0;
-    r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
+    (1.0 - r0).mul_add((1.0 - cosine).powi(5), r0)
 }

@@ -17,7 +17,7 @@ fn main() -> Result<(), String> {
     }
 
     let time_elapsed: time::Duration = timer.elapsed();
-    let s: String = format!("\rIt took {} seconds", time_elapsed.as_secs_f64());
-    println!("{:<23}", s);
+    let s: String = format!("It took {time_elapsed:?}");
+    println!("\r{s:<23}");
     Ok(())
 }

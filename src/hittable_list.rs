@@ -21,7 +21,8 @@ impl<const L: usize> HittableList<L> {
         self.i = 0;
         self.objects.fill(Hittable::Empty);
     }
-    pub fn new() -> Self{
+    #[must_use]
+    pub const fn new() -> Self{
         let objects = [Hittable::Empty; L];
         let i = 0;
         Self{i,objects}
@@ -29,10 +30,13 @@ impl<const L: usize> HittableList<L> {
 }
 
 impl<const L: usize> HittableList<L> {
+    /// .
+    ///
+    /// # Panics
+    ///
+    /// Panics if you add more items than space is allocated
     pub fn add(&mut self, object: Hittable) {
-        if self.i >= self.objects.len(){
-            panic!("out of bounds");
-        }
+        assert!(self.i < self.objects.len(), "out of bounds");
         self.objects[self.i] = object;
         self.i += 1;
     }

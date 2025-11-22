@@ -1,7 +1,4 @@
-use crate::vec3::{
-    Point3,
-    Vec3,
-};
+use crate::vec3::{Point3, Vec3};
 
 #[derive(Debug)]
 pub struct Ray {
@@ -10,6 +7,7 @@ pub struct Ray {
 }
 
 impl Ray {
+    #[must_use]
     pub fn new(orig: &Point3, dir: &Vec3) -> Self {
         Self {
             orig: Point3::new(orig[0], orig[1], orig[2]),
@@ -17,12 +15,15 @@ impl Ray {
         }
     }
 
-    pub fn origin(&self) -> &Point3 {
+    #[must_use]
+    pub const fn origin(&self) -> &Point3 {
         &self.orig
     }
-    pub fn direction(&self) -> &Vec3 {
+    #[must_use]
+    pub const fn direction(&self) -> &Vec3 {
         &self.dir
     }
+    #[must_use]
     pub fn at(&self, t: f64) -> Point3 {
         self.orig + t * self.dir
     }

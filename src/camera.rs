@@ -17,7 +17,6 @@ use crate::{
     },
 };
 use std::{
-    error::Error,
     fs::File,
     io::Write,
     sync::{Arc, Mutex},
@@ -62,34 +61,34 @@ impl Default for Camera {
             vup: Vec3::new(0.0, 1.0, 0.0),
             defocus_angle: 0.0,
             focus_dist: 10.0,
-            image_height: Default::default(),
-            pixel00_loc: Default::default(),
-            pixel_delta_v: Default::default(),
-            pixel_delta_u: Default::default(),
-            pixel_samples_scale: Default::default(),
-            u: Default::default(),
-            v: Default::default(),
-            w: Default::default(),
-            defocus_disk_u: Default::default(),
-            defocus_disk_v: Default::default(),
+            image_height: i32::default(),
+            pixel00_loc: Vec3::default(),
+            pixel_delta_v: Vec3::default(),
+            pixel_delta_u: Vec3::default(),
+            pixel_samples_scale: f64::default(),
+            u: Vec3::default(),
+            v: Vec3::default(),
+            w: Vec3::default(),
+            defocus_disk_u: Vec3::default(),
+            defocus_disk_v: Vec3::default(),
         }
     }
 }
 
 impl Camera {
     fn init(&mut self) {
-        self.image_height = (self.image_width as f64 / self.aspect_ratio) as i32;
+        self.image_height = unsafe { (f64::from(self.image_width) / self.aspect_ratio).to_int_unchecked() };
         self.image_height = match self.image_height {
             x if x < 1 => 1,
             _ => self.image_height,
         };
 
-        self.pixel_samples_scale = 1.0 / self.samples_per_pixel as f64;
+        self.pixel_samples_scale = 1.0 / f64::from(self.samples_per_pixel);
         // Determine viewport dimensions
         let theta = self.vfov.to_radians();
         let h = (theta / 2.0).tan();
         let viewport_height = 2.0 * h * self.focus_dist;
-        let viewport_width = viewport_height * (self.image_width as f64 / self.image_height as f64);
+        let viewport_width = viewport_height * (f64::from(self.image_width) / f64::from(self.image_height));
 
         self.w = unit_vector(&(self.look_from - self.look_at));
         self.u = unit_vector(&cross(&self.vup, &self.w));
@@ -99,8 +98,8 @@ impl Camera {
         let viewport_v = &(viewport_height * -&self.v);
 
         // Calc the Horizontal and vertical delta vectors form pixel to pixel
-        self.pixel_delta_u = viewport_u / self.image_width as f64;
-        self.pixel_delta_v = viewport_v / self.image_height as f64;
+        self.pixel_delta_u = viewport_u / f64::from(self.image_width);
+        self.pixel_delta_v = viewport_v / f64::from(self.image_height);
 
         //calc location up upper left pixel
         let viewport_upper_left =
@@ -113,32 +112,42 @@ impl Camera {
     }
 }
 
+#[derive(Debug)]
+pub struct RenderError;
+
+/// .
+///
+/// # Errors
+///
+/// This function will return an error if 
+/// It fials to write to file
 pub fn render<const L: usize>(
     cam: &mut Camera,
     file_name: &str,
     world: &HittableList<L>,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), RenderError>
+{
     cam.init();
-    let mut image_file = std::io::BufWriter::new(File::create(file_name)?);
-    write!(
+    let mut image_file = std::io::BufWriter::new(File::create(file_name).map_err(|_| RenderError)?);
+    let _ = write!(
         image_file,
         "P3\n {} {}\n255\n",
         cam.image_width, cam.image_height
-    )?;
+    ).map_err(|_| RenderError);
     let cam = Arc::new(cam);
     let world = Arc::new(world);
     for j in 0..cam.image_height {
         print!("\rScanlines remaining: {} ", (cam.image_height - j));
-        let mut res = vec![String::new(); cam.image_width.try_into().unwrap()];
+        let mut res = vec![String::new(); cam.image_width.try_into().map_err(|_| RenderError)?];
         let jobs =    Arc::new(Mutex::new((0..cam.image_width).zip(res.iter_mut())));
-        let count = thread::available_parallelism()?.get() / 2;
+        let count = thread::available_parallelism().map_err(|_| RenderError)?.get();
         thread::scope(|scope| {
             for _ in 0..count.max(1) {
             let jobs = jobs.clone();
             let world = world.clone();
             let cam = cam.clone();
                 scope.spawn(move || {
-                    let next = || jobs.lock().unwrap().next();
+                    let next = || jobs.lock().ok()?.next();
                     while let Some((i, o)) = next() {
                         let mut pixel_color = Color::new(0.0, 0.0, 0.0);
                         for _ in 0..cam.samples_per_pixel {
@@ -151,11 +160,11 @@ pub fn render<const L: usize>(
             }
         });
         for ele in res {
-            writeln!(image_file, "{}", &ele)?;
+            writeln!(image_file, "{}", &ele).map_err(|_| RenderError)?;
         }
-        std::io::stdout().flush()?;
+        std::io::stdout().flush().map_err(|_| RenderError)?;
     }
-    image_file.flush()?;
+    image_file.flush().map_err(|_| RenderError)?;
     print!("{:<23}", "\rDone");
     Ok(())
 }
@@ -181,8 +190,8 @@ fn ray_color<const L: usize>(r: &Ray, depth: i32, world: &HittableList<L>) -> Co
 fn get_ray(cam: &Camera, i: i32, j: i32) -> Ray {
     let offset = sample_square();
     let pixel_sample = cam.pixel00_loc
-        + ((i as f64 + offset.x()) * cam.pixel_delta_u)
-        + ((j as f64 + offset.y()) * cam.pixel_delta_v);
+        + ((f64::from(i) + offset.x()) * cam.pixel_delta_u)
+        + ((f64::from(j) + offset.y()) * cam.pixel_delta_v);
     let ray_origin = if cam.defocus_angle <= 0.0 {
         &cam.look_from
     } else {

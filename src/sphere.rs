@@ -18,8 +18,8 @@ pub enum Hittable {
 impl Hittable {
     pub fn hit(&self, r: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool {
         match self {
-            Hittable::Sphere(center, radius, mat) => sphere_hit(*center, *radius, *mat, r, ray_t, rec),
-            Hittable::Empty => false,
+            Self::Sphere(center, radius, mat) => sphere_hit(*center, *radius, *mat, r, ray_t, rec),
+            Self::Empty => false,
         }
     }
 }
@@ -29,9 +29,9 @@ fn sphere_hit(center: Point3, radius: f64, mat: Mat, r: &Ray, ray_t: &Interval, 
     let oc: Point3 = center - r.origin();
     let a: f64 = r.direction().len_squared();
     let h: f64 = dot(r.direction(), &oc);
-    let c: f64 = oc.len_squared() - radius * radius;
+    let c: f64 = radius.mul_add(-radius, oc.len_squared());
 
-    let discriminant: f64 = h * h - a * c;
+    let discriminant: f64 = h.mul_add(h, -(a * c));
     if discriminant < 0.0 {
         return false;
     }

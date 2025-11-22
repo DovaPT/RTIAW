@@ -2,11 +2,7 @@ use crate::{
     color::Color,
     material::Mat,
     ray::Ray,
-    vec3::{
-        Point3,
-        Vec3,
-        dot,
-    },
+    vec3::{Point3, Vec3, dot},
 };
 
 pub struct HitRecord {
@@ -32,6 +28,7 @@ impl Default for HitRecord {
 }
 
 impl HitRecord {
+    #[must_use]
     pub fn new(p: Point3, normal: Vec3, t: f64) -> Self {
         Self {
             p,

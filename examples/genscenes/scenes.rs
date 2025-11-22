@@ -28,9 +28,9 @@ pub fn scene1() {
         for b in -5..5 {
             let choose_mat = rand_f64();
             let center = Point3::new(
-                a as f64 + 0.9 * rand_f64(),
+                0.9f64.mul_add(rand_f64(), f64::from(a)),
                 0.2,
-                b as f64 + 0.9 * rand_f64(),
+                0.9f64.mul_add(rand_f64(), f64::from(b)),
             );
 
             if (center - Point3::new(4.0, 0.2, 0.0)).len() > 0.9 {
@@ -84,9 +84,9 @@ pub fn scene1() {
     cam.look_at = Point3::new(0.0, 0.0, 0.0);
     cam.vup = Vec3::new(0.0, 1.0, 0.0);
     if let Err(e) = render(&mut cam, "scene1.ppm", &world) {
-        println!("Encountered Error: {}", e);
+        println!("Encountered Error: {e:?}");
         process::exit(1);
-    };
+    }
 }
 
 pub fn scene2() {
@@ -135,7 +135,7 @@ pub fn scene2() {
     cam.vfov = 15.0;
     cam.vup = Vec3::new(0.0, 1.0, 0.0);
     if let Err(e) = render(&mut cam, "scene2.ppm", &world) {
-        println!("Encountered Error: {}", e);
+        println!("Encountered Error: {e:?}");
         process::exit(1);
-    };
+    }
 }
